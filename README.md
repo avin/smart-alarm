@@ -8,6 +8,8 @@ Smart Alarm is a clean desktop alarm app for busy people.
 It lives in your tray.  
 It shows up when it matters. 🔔
 
+![Smart Alarm main screen](screenshots/main.png)
+
 ## Why you'll love it 💛
 
 - Fast reminders ⚡
@@ -16,11 +18,16 @@ It shows up when it matters. 🔔
 - Snooze when you need it 😴
 - Weekly, one-time, and interval alarms 📅
 
-## Built for daily focus 🎯
+## Screenshots 📷
 
-Plan breaks.  
-Catch meetings.  
-Build habits.  
-Stay in flow. 🌊
+![Once alarm](screenshots/once.png)
 
-Smart Alarm keeps your day moving. 💼✨
+![Weekly alarm](screenshots/weekly.png)
+
+![Nth week alarm](screenshots/nth-week.png)
+
+![Interval alarm](screenshots/interval.png)
+
+## License
+
+GPL-3.0

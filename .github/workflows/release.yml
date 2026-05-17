@@ -53,7 +53,9 @@ jobs:
           target: 'desktop'
           arch: ${{ matrix.qt_arch }}
           cache: true
-          archives: 'qtbase qtmultimedia qtsvg'
+          cache-key-prefix: smart-alarm-qt-6.8.3-multimedia
+          modules: 'qtmultimedia'
+          archives: 'qtbase qtsvg'
           tools: ${{ matrix.qt_tools }}
 
       - name: Get version from tag

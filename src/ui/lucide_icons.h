@@ -18,6 +18,7 @@ enum class Icon {
     Settings,
     SquarePen,
     Trash2,
+    X,
 };
 
 QIcon icon(Icon icon);

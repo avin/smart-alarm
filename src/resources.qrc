@@ -12,5 +12,7 @@
         <file alias="settings.svg">assets/icons/settings.svg</file>
         <file alias="square-pen.svg">assets/icons/square-pen.svg</file>
         <file alias="trash-2.svg">assets/icons/trash-2.svg</file>
+        <file alias="tray-alarm.svg">assets/icons/tray-alarm.svg</file>
+        <file alias="x.svg">assets/icons/x.svg</file>
     </qresource>
 </RCC>

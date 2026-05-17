@@ -3,9 +3,39 @@
 #include "ui/lucide_icons.h"
 #include "ui/main_window.h"
 
+#include <QImage>
 #include <QMenu>
+#include <QPainter>
 
 namespace smartalarm {
+
+namespace {
+
+QPixmap grayscalePixmap(const QIcon &icon, const QSize &size)
+{
+    QPixmap pixmap(size);
+    pixmap.fill(Qt::transparent);
+
+    {
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        icon.paint(&painter, pixmap.rect());
+    }
+
+    auto image = pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
+    for (int y = 0; y < image.height(); ++y) {
+        auto *line = reinterpret_cast<QRgb *>(image.scanLine(y));
+        for (int x = 0; x < image.width(); ++x) {
+            const QRgb pixel = line[x];
+            const int gray = qGray(pixel);
+            line[x] = qRgba(gray, gray, gray, qAlpha(pixel));
+        }
+    }
+
+    return QPixmap::fromImage(image);
+}
+
+} // namespace
 
 TrayController::TrayController(AppController *controller, MainWindow *mainWindow, QObject *parent)
     : QObject(parent)
@@ -16,8 +46,7 @@ TrayController::TrayController(AppController *controller, MainWindow *mainWindow
     auto *menu = new QMenu;
     auto *settings = menu->addAction(QStringLiteral("Notification settings"));
     settings->setIcon(lucide::icon(lucide::Icon::Settings));
-    m_enabledAction = menu->addAction(QStringLiteral("Enabled"));
-    m_enabledAction->setIcon(lucide::icon(m_controller->runtimeNotificationsEnabled() ? lucide::Icon::Bell : lucide::Icon::BellOff));
+    m_enabledAction = menu->addAction(QStringLiteral("Notifications"));
     m_enabledAction->setCheckable(true);
     m_enabledAction->setChecked(m_controller->runtimeNotificationsEnabled());
     menu->addSeparator();
@@ -31,7 +60,6 @@ TrayController::TrayController(AppController *controller, MainWindow *mainWindow
     connect(m_controller, &AppController::runtimeToggleChanged, this, [this](bool enabled) {
         QSignalBlocker blocker(m_enabledAction);
         m_enabledAction->setChecked(enabled);
-        m_enabledAction->setIcon(lucide::icon(enabled ? lucide::Icon::Bell : lucide::Icon::BellOff));
         m_tray.setIcon(makeIcon(enabled));
     });
     connect(&m_tray, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
@@ -53,7 +81,18 @@ void TrayController::hide()
 
 QIcon TrayController::makeIcon(bool enabled) const
 {
-    return lucide::icon(enabled ? lucide::Icon::AlarmClock : lucide::Icon::AlarmClockOff);
+    const QIcon baseIcon(QStringLiteral(":/icons/tray-alarm.svg"));
+    if (enabled) {
+        return baseIcon;
+    }
+
+    QPixmap pixmap = grayscalePixmap(baseIcon, QSize(64, 64));
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(QPen(QColor(QStringLiteral("#D94841")), 7, Qt::SolidLine, Qt::RoundCap));
+    painter.drawLine(QPointF(10, 54), QPointF(54, 10));
+
+    return QIcon(pixmap);
 }
 
 } // namespace smartalarm

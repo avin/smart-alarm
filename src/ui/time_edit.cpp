@@ -1,6 +1,7 @@
 #include "ui/time_edit.h"
 
 #include "core/time_input_normalizer.h"
+#include "ui/lucide_icons.h"
 
 #include <QEvent>
 #include <QHBoxLayout>
@@ -18,7 +19,7 @@ TimeEdit::TimeEdit(QWidget *parent)
     m_edit->setPlaceholderText(QStringLiteral("HH:mm"));
     m_edit->setMaxLength(5);
     m_clearButton->setParent(m_edit);
-    m_clearButton->setText(QStringLiteral("X"));
+    m_clearButton->setIcon(lucide::icon(lucide::Icon::X));
     m_clearButton->setToolTip(QStringLiteral("Clear"));
     m_clearButton->setAutoRaise(true);
     m_clearButton->setCursor(Qt::ArrowCursor);

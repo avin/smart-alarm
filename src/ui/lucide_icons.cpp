@@ -29,6 +29,8 @@ QString path(Icon icon)
         return QStringLiteral(":/icons/square-pen.svg");
     case Icon::Trash2:
         return QStringLiteral(":/icons/trash-2.svg");
+    case Icon::X:
+        return QStringLiteral(":/icons/x.svg");
     }
     return {};
 }

@@ -15,6 +15,15 @@
 
 namespace smartalarm {
 
+namespace {
+
+QString notificationsStateText(bool enabled)
+{
+    return enabled ? QStringLiteral("Notifications enabled") : QStringLiteral("Notifications disabled");
+}
+
+} // namespace
+
 MainWindow::MainWindow(AppController *controller, audio::AudioQueue *audioQueue, audio::PreviewPlayer *previewPlayer, QWidget *parent)
     : QMainWindow(parent)
     , m_controller(controller)
@@ -76,7 +85,7 @@ void MainWindow::createTopBar()
     m_runtimeToggle->setIcon(lucide::icon(m_controller->runtimeNotificationsEnabled() ? lucide::Icon::Bell : lucide::Icon::BellOff));
     m_runtimeToggle->setCheckable(true);
     m_runtimeToggle->setChecked(m_controller->runtimeNotificationsEnabled());
-    m_runtimeToggle->setToolTip(QStringLiteral("Enabled"));
+    m_runtimeToggle->setToolTip(notificationsStateText(m_controller->runtimeNotificationsEnabled()));
     auto *settings = new QToolButton(this);
     settings->setIcon(lucide::icon(lucide::Icon::Settings));
     settings->setToolTip(QStringLiteral("Settings"));
@@ -88,6 +97,7 @@ void MainWindow::createTopBar()
     connect(m_runtimeToggle, &QToolButton::toggled, m_controller, &AppController::setRuntimeNotificationsEnabled);
     connect(m_controller, &AppController::runtimeToggleChanged, this, [this](bool enabled) {
         m_runtimeToggle->setIcon(lucide::icon(enabled ? lucide::Icon::Bell : lucide::Icon::BellOff));
+        m_runtimeToggle->setToolTip(notificationsStateText(enabled));
     });
 }
 

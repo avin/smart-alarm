@@ -1,5 +1,7 @@
 #include "ui/date_edit.h"
 
+#include "ui/lucide_icons.h"
+
 #include <QCalendarWidget>
 #include <QDialog>
 #include <QEvent>
@@ -18,7 +20,7 @@ DateEdit::DateEdit(QWidget *parent)
     layout->setContentsMargins(0, 0, 0, 0);
     m_edit->setReadOnly(true);
     m_clearButton->setParent(m_edit);
-    m_clearButton->setText(QStringLiteral("X"));
+    m_clearButton->setIcon(lucide::icon(lucide::Icon::X));
     m_clearButton->setToolTip(QStringLiteral("Clear"));
     m_clearButton->setAutoRaise(true);
     m_clearButton->setCursor(Qt::ArrowCursor);

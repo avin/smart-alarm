@@ -46,7 +46,7 @@ TrayController::TrayController(AppController *controller, MainWindow *mainWindow
     auto *menu = new QMenu;
     auto *settings = menu->addAction(QStringLiteral("Notification settings"));
     settings->setIcon(lucide::icon(lucide::Icon::Settings));
-    m_enabledAction = menu->addAction(QStringLiteral("Notifications"));
+    m_enabledAction = menu->addAction(QStringLiteral("Enabled"));
     m_enabledAction->setCheckable(true);
     m_enabledAction->setChecked(m_controller->runtimeNotificationsEnabled());
     menu->addSeparator();

@@ -67,6 +67,7 @@ install(TARGETS SmartAlarm
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 qt_generate_deploy_app_script(
     TARGET SmartAlarm

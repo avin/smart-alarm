@@ -22,12 +22,14 @@ jobs:
             qt_tools: tools_ifw tools_mingw1310
             artifact_suffix: windows-x64
             installer_ext: exe
-          - os: macos-13
-            qt_host: mac
-            qt_arch: clang_64
-            qt_tools: tools_ifw
-            artifact_suffix: macos-x64
-            installer_ext: app
+          # Temporarily disabled: macos-13 jobs can wait indefinitely for an available runner.
+          # Re-enable when the runner queue/capacity issue is resolved.
+          # - os: macos-13
+          #   qt_host: mac
+          #   qt_arch: clang_64
+          #   qt_tools: tools_ifw
+          #   artifact_suffix: macos-x64
+          #   installer_ext: app
           - os: ubuntu-22.04
             qt_host: linux
             qt_arch: linux_gcc_64

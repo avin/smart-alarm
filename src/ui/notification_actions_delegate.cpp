@@ -1,9 +1,9 @@
 #include "ui/notification_actions_delegate.h"
 
-#include <QApplication>
+#include "ui/lucide_icons.h"
+
 #include <QMouseEvent>
 #include <QPainter>
-#include <QStyle>
 
 namespace smartalarm {
 
@@ -14,10 +14,8 @@ NotificationActionsDelegate::NotificationActionsDelegate(QObject *parent)
 
 void NotificationActionsDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &) const
 {
-    const auto editIcon = QApplication::style()->standardIcon(QStyle::SP_FileDialogDetailedView);
-    const auto deleteIcon = QApplication::style()->standardIcon(QStyle::SP_TrashIcon);
-    editIcon.paint(painter, editRect(option));
-    deleteIcon.paint(painter, deleteRect(option));
+    lucide::icon(lucide::Icon::SquarePen).paint(painter, editRect(option));
+    lucide::icon(lucide::Icon::Trash2).paint(painter, deleteRect(option));
 }
 
 bool NotificationActionsDelegate::editorEvent(QEvent *event, QAbstractItemModel *, const QStyleOptionViewItem &option, const QModelIndex &index)

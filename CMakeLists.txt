@@ -41,6 +41,7 @@ set(SMART_ALARM_CORE_SOURCES
     src/ui/notification_actions_delegate.cpp
     src/ui/notification_editor_dialog.cpp
     src/ui/global_settings_dialog.cpp
+    src/ui/lucide_icons.cpp
     src/ui/main_window.cpp
     src/ui/tray_controller.cpp
 )
@@ -49,7 +50,7 @@ add_library(smart_alarm_lib STATIC ${SMART_ALARM_CORE_SOURCES})
 target_include_directories(smart_alarm_lib PUBLIC src)
 target_link_libraries(smart_alarm_lib PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Multimedia)
 
-add_executable(SmartAlarm src/main.cpp)
+add_executable(SmartAlarm src/main.cpp src/resources.qrc)
 target_link_libraries(SmartAlarm PRIVATE smart_alarm_lib)
 
 enable_testing()

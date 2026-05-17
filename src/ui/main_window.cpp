@@ -1,6 +1,7 @@
 #include "ui/main_window.h"
 
 #include "ui/global_settings_dialog.h"
+#include "ui/lucide_icons.h"
 #include "ui/notification_actions_delegate.h"
 #include "ui/notification_editor_dialog.h"
 #include "ui/notification_state_delegate.h"
@@ -9,7 +10,6 @@
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QStyle>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -69,15 +69,16 @@ void MainWindow::createTopBar()
 {
     auto *bar = new QHBoxLayout;
     auto *newButton = new QPushButton(QStringLiteral("New notification"), this);
+    newButton->setIcon(lucide::icon(lucide::Icon::Plus));
     bar->addWidget(newButton);
     bar->addStretch();
     m_runtimeToggle = new QToolButton(this);
-    m_runtimeToggle->setIcon(style()->standardIcon(QStyle::SP_ComputerIcon));
+    m_runtimeToggle->setIcon(lucide::icon(m_controller->runtimeNotificationsEnabled() ? lucide::Icon::Bell : lucide::Icon::BellOff));
     m_runtimeToggle->setCheckable(true);
     m_runtimeToggle->setChecked(m_controller->runtimeNotificationsEnabled());
     m_runtimeToggle->setToolTip(QStringLiteral("Enabled"));
     auto *settings = new QToolButton(this);
-    settings->setIcon(style()->standardIcon(QStyle::SP_FileDialogDetailedView));
+    settings->setIcon(lucide::icon(lucide::Icon::Settings));
     settings->setToolTip(QStringLiteral("Settings"));
     bar->addWidget(m_runtimeToggle);
     bar->addWidget(settings);
@@ -85,6 +86,9 @@ void MainWindow::createTopBar()
     connect(newButton, &QPushButton::clicked, this, &MainWindow::createNotification);
     connect(settings, &QToolButton::clicked, this, &MainWindow::openGlobalSettings);
     connect(m_runtimeToggle, &QToolButton::toggled, m_controller, &AppController::setRuntimeNotificationsEnabled);
+    connect(m_controller, &AppController::runtimeToggleChanged, this, [this](bool enabled) {
+        m_runtimeToggle->setIcon(lucide::icon(enabled ? lucide::Icon::Bell : lucide::Icon::BellOff));
+    });
 }
 
 void MainWindow::createTable()

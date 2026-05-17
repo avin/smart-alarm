@@ -38,3 +38,5 @@ ui_*.h
 # OS files
 Thumbs.db
 Desktop.ini
+
+/icons

@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="alarm-clock.svg">assets/icons/alarm-clock.svg</file>
+        <file alias="alarm-clock-off.svg">assets/icons/alarm-clock-off.svg</file>
+        <file alias="bell.svg">assets/icons/bell.svg</file>
+        <file alias="bell-off.svg">assets/icons/bell-off.svg</file>
+        <file alias="chevron-down.svg">assets/icons/chevron-down.svg</file>
+        <file alias="chevron-right.svg">assets/icons/chevron-right.svg</file>
+        <file alias="circle-question-mark.svg">assets/icons/circle-question-mark.svg</file>
+        <file alias="play.svg">assets/icons/play.svg</file>
+        <file alias="plus.svg">assets/icons/plus.svg</file>
+        <file alias="settings.svg">assets/icons/settings.svg</file>
+        <file alias="square-pen.svg">assets/icons/square-pen.svg</file>
+        <file alias="trash-2.svg">assets/icons/trash-2.svg</file>
+    </qresource>
+</RCC>

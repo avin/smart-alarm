@@ -7,6 +7,7 @@
 #include "ui/color_palette_widget.h"
 #include "ui/date_edit.h"
 #include "ui/day_of_week_selector.h"
+#include "ui/lucide_icons.h"
 #include "ui/time_edit.h"
 
 #include <QDialogButtonBox>
@@ -92,14 +93,14 @@ QWidget *createCollapsibleSection(const QString &title, QWidget *content, QToolB
     toggle->setText(title);
     toggle->setCheckable(true);
     toggle->setChecked(false);
-    toggle->setArrowType(Qt::RightArrow);
+    toggle->setIcon(lucide::icon(lucide::Icon::ChevronRight));
     toggle->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toggle->setAutoRaise(true);
     content->setVisible(false);
 
     QObject::connect(toggle, &QToolButton::toggled, content, [toggle, content](bool expanded) {
         content->setVisible(expanded);
-        toggle->setArrowType(expanded ? Qt::DownArrow : Qt::RightArrow);
+        toggle->setIcon(lucide::icon(expanded ? lucide::Icon::ChevronDown : lucide::Icon::ChevronRight));
     });
 
     layout->addWidget(toggle);
@@ -114,7 +115,7 @@ void setCollapsibleExpanded(QToolButton *toggle, QWidget *content, bool expanded
     }
     toggle->setChecked(expanded);
     content->setVisible(expanded);
-    toggle->setArrowType(expanded ? Qt::DownArrow : Qt::RightArrow);
+    toggle->setIcon(lucide::icon(expanded ? lucide::Icon::ChevronDown : lucide::Icon::ChevronRight));
 }
 
 QWidget *createScrollableTab(QWidget *content, QWidget *parent)
@@ -173,7 +174,7 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
         m_sound->addItem(preset.displayName, static_cast<int>(preset.preset));
     }
     m_sound->addItem(QStringLiteral("Custom pattern..."));
-    auto *play = new QPushButton(style()->standardIcon(QStyle::SP_MediaPlay), QString(), this);
+    auto *play = new QPushButton(lucide::icon(lucide::Icon::Play), QString(), this);
     play->setToolTip(QStringLiteral("Play"));
     play->setEnabled(previewEnabled);
     soundRow->addWidget(m_sound, 1);
@@ -185,7 +186,8 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
     customRow->setContentsMargins(0, 0, 0, 0);
     customRow->setSpacing(2);
     m_customPattern = new QLineEdit(this);
-    m_help = new QPushButton(QStringLiteral("?"), this);
+    m_help = new QPushButton(lucide::icon(lucide::Icon::CircleQuestionMark), QString(), this);
+    m_help->setToolTip(QStringLiteral("Help"));
     const int helpButtonSide = m_customPattern->sizeHint().height();
     m_help->setFixedSize(helpButtonSide, helpButtonSide);
     customRow->addWidget(m_customPattern, 1);

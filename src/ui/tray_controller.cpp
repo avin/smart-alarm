@@ -1,9 +1,9 @@
 #include "ui/tray_controller.h"
 
+#include "ui/lucide_icons.h"
 #include "ui/main_window.h"
 
 #include <QMenu>
-#include <QPainter>
 
 namespace smartalarm {
 
@@ -15,7 +15,9 @@ TrayController::TrayController(AppController *controller, MainWindow *mainWindow
 {
     auto *menu = new QMenu;
     auto *settings = menu->addAction(QStringLiteral("Notification settings"));
+    settings->setIcon(lucide::icon(lucide::Icon::Settings));
     m_enabledAction = menu->addAction(QStringLiteral("Enabled"));
+    m_enabledAction->setIcon(lucide::icon(m_controller->runtimeNotificationsEnabled() ? lucide::Icon::Bell : lucide::Icon::BellOff));
     m_enabledAction->setCheckable(true);
     m_enabledAction->setChecked(m_controller->runtimeNotificationsEnabled());
     menu->addSeparator();
@@ -29,6 +31,7 @@ TrayController::TrayController(AppController *controller, MainWindow *mainWindow
     connect(m_controller, &AppController::runtimeToggleChanged, this, [this](bool enabled) {
         QSignalBlocker blocker(m_enabledAction);
         m_enabledAction->setChecked(enabled);
+        m_enabledAction->setIcon(lucide::icon(enabled ? lucide::Icon::Bell : lucide::Icon::BellOff));
         m_tray.setIcon(makeIcon(enabled));
     });
     connect(&m_tray, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
@@ -50,22 +53,7 @@ void TrayController::hide()
 
 QIcon TrayController::makeIcon(bool enabled) const
 {
-    QPixmap pixmap(32, 32);
-    pixmap.fill(Qt::transparent);
-    QPainter painter(&pixmap);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(QPen(QColor(QStringLiteral("#303030")), 2));
-    painter.setBrush(QColor(QStringLiteral("#f7f7f7")));
-    painter.drawEllipse(QRectF(6, 7, 20, 20));
-    painter.drawLine(QPointF(16, 17), QPointF(16, 11));
-    painter.drawLine(QPointF(16, 17), QPointF(21, 20));
-    painter.drawLine(QPointF(10, 6), QPointF(7, 3));
-    painter.drawLine(QPointF(22, 6), QPointF(25, 3));
-    if (!enabled) {
-        painter.setPen(QPen(QColor(QStringLiteral("#D94841")), 4));
-        painter.drawLine(QPointF(6, 26), QPointF(26, 6));
-    }
-    return QIcon(pixmap);
+    return lucide::icon(enabled ? lucide::Icon::AlarmClock : lucide::Icon::AlarmClockOff);
 }
 
 } // namespace smartalarm

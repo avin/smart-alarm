@@ -15,6 +15,14 @@ private slots:
         QCOMPARE(TimeInputNormalizer::normalize(QStringLiteral("2460")).value(), QTime(23, 59));
         QCOMPARE(TimeInputNormalizer::normalize(QStringLiteral(":7")).value(), QTime(0, 7));
     }
+
+    void filtersNonDigitInputAsColon()
+    {
+        QCOMPARE(TimeInputNormalizer::filteredText(QStringLiteral("12a34")), QStringLiteral("12:34"));
+        QCOMPARE(TimeInputNormalizer::filteredText(QStringLiteral("12/34")), QStringLiteral("12:34"));
+        QCOMPARE(TimeInputNormalizer::filteredText(QStringLiteral("12 34")), QStringLiteral("12:34"));
+        QCOMPARE(TimeInputNormalizer::filteredText(QStringLiteral("1::2")), QStringLiteral("1:2"));
+    }
 };
 
 QTEST_MAIN(TestTimeInputNormalizer)

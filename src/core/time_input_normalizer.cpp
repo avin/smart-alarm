@@ -15,8 +15,8 @@ QString TimeInputNormalizer::filteredText(const QString &input)
                 result.append(ch);
                 ++digitCount;
             }
-        } else if (ch == QLatin1Char(':') && !colonUsed) {
-            result.append(ch);
+        } else if (!colonUsed) {
+            result.append(QLatin1Char(':'));
             colonUsed = true;
         }
     }

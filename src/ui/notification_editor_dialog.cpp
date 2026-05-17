@@ -186,6 +186,8 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
     customRow->setSpacing(2);
     m_customPattern = new QLineEdit(this);
     m_help = new QPushButton(QStringLiteral("?"), this);
+    const int helpButtonSide = m_customPattern->sizeHint().height();
+    m_help->setFixedSize(helpButtonSide, helpButtonSide);
     customRow->addWidget(m_customPattern, 1);
     customRow->addWidget(m_help);
     m_customPatternContainer = withVerticalLabel(QStringLiteral("Custom pattern"), customRowWidget, this, &m_customPatternLabel);

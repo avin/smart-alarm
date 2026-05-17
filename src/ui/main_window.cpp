@@ -1,0 +1,173 @@
+#include "ui/main_window.h"
+
+#include "ui/global_settings_dialog.h"
+#include "ui/notification_actions_delegate.h"
+#include "ui/notification_editor_dialog.h"
+
+#include <QCloseEvent>
+#include <QHeaderView>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QStyle>
+#include <QToolButton>
+#include <QVBoxLayout>
+
+namespace smartalarm {
+
+MainWindow::MainWindow(AppController *controller, audio::AudioQueue *audioQueue, audio::PreviewPlayer *previewPlayer, QWidget *parent)
+    : QMainWindow(parent)
+    , m_controller(controller)
+    , m_audioQueue(audioQueue)
+    , m_previewPlayer(previewPlayer)
+    , m_central(new QWidget(this))
+{
+    setWindowTitle(QStringLiteral("Smart Alarm"));
+    resize(900, 520);
+    setMinimumSize(720, 420);
+    auto *layout = new QVBoxLayout(m_central);
+    layout->setContentsMargins(6, 6, 6, 6);
+    layout->setSpacing(6);
+    setCentralWidget(m_central);
+    createTopBar();
+    createTable();
+    connect(m_controller, &AppController::runtimeToggleChanged, this, [this](bool enabled) {
+        m_runtimeToggle->setChecked(enabled);
+    });
+    connect(m_controller, &AppController::saveFailed, this, [this](const QString &message) {
+        QMessageBox::critical(this, QStringLiteral("Save failed"), message);
+    });
+}
+
+void MainWindow::setExiting(bool exiting)
+{
+    m_exiting = exiting;
+}
+
+void MainWindow::showSettingsWindow()
+{
+    if (isMinimized()) {
+        showNormal();
+    } else {
+        show();
+    }
+    raise();
+    activateWindow();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (m_exiting) {
+        event->accept();
+        return;
+    }
+    event->ignore();
+    hide();
+}
+
+void MainWindow::createTopBar()
+{
+    auto *bar = new QHBoxLayout;
+    auto *newButton = new QPushButton(QStringLiteral("New notification"), this);
+    bar->addWidget(newButton);
+    bar->addStretch();
+    m_runtimeToggle = new QToolButton(this);
+    m_runtimeToggle->setIcon(style()->standardIcon(QStyle::SP_ComputerIcon));
+    m_runtimeToggle->setCheckable(true);
+    m_runtimeToggle->setChecked(m_controller->runtimeNotificationsEnabled());
+    m_runtimeToggle->setToolTip(QStringLiteral("Enabled"));
+    auto *settings = new QToolButton(this);
+    settings->setIcon(style()->standardIcon(QStyle::SP_FileDialogDetailedView));
+    settings->setToolTip(QStringLiteral("Settings"));
+    bar->addWidget(m_runtimeToggle);
+    bar->addWidget(settings);
+    qobject_cast<QVBoxLayout *>(m_central->layout())->addLayout(bar);
+    connect(newButton, &QPushButton::clicked, this, &MainWindow::createNotification);
+    connect(settings, &QToolButton::clicked, this, &MainWindow::openGlobalSettings);
+    connect(m_runtimeToggle, &QToolButton::toggled, m_controller, &AppController::setRuntimeNotificationsEnabled);
+}
+
+void MainWindow::createTable()
+{
+    m_table = new QTableView(this);
+    m_model = new NotificationTableModel(m_controller, this);
+    m_table->setModel(m_model);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_table->setAlternatingRowColors(true);
+    m_table->verticalHeader()->setVisible(false);
+    m_table->horizontalHeader()->setStretchLastSection(false);
+    m_table->setColumnWidth(NotificationTableModel::EnabledColumn, 36);
+    m_table->setColumnWidth(NotificationTableModel::ColorColumn, 42);
+    m_table->setColumnWidth(NotificationTableModel::ActionsColumn, 86);
+    m_table->horizontalHeader()->setSectionResizeMode(NotificationTableModel::MessageColumn, QHeaderView::Stretch);
+    m_table->horizontalHeader()->setSectionResizeMode(NotificationTableModel::ScheduleColumn, QHeaderView::Stretch);
+    auto *delegate = new NotificationActionsDelegate(this);
+    m_table->setItemDelegateForColumn(NotificationTableModel::ActionsColumn, delegate);
+    connect(delegate, &NotificationActionsDelegate::editRequested, this, &MainWindow::editNotification);
+    connect(delegate, &NotificationActionsDelegate::deleteRequested, this, &MainWindow::deleteNotification);
+    qobject_cast<QVBoxLayout *>(m_central->layout())->addWidget(m_table, 1);
+}
+
+void MainWindow::createNotification()
+{
+    Notification notification;
+    notification.schedule = OnceSchedule { QDate::currentDate(), std::nullopt };
+    NotificationEditorDialog dialog(notification, m_previewPlayer, !m_audioQueue->isPlaying(), this);
+    while (dialog.exec() == QDialog::Accepted) {
+        if (saveEditorResult(std::nullopt, dialog)) {
+            break;
+        }
+    }
+}
+
+void MainWindow::editNotification(int row)
+{
+    const auto notification = m_model->notificationAt(row);
+    if (!notification) {
+        return;
+    }
+    NotificationEditorDialog dialog(*notification, m_previewPlayer, !m_audioQueue->isPlaying(), this);
+    while (dialog.exec() == QDialog::Accepted) {
+        if (saveEditorResult(notification->id, dialog)) {
+            break;
+        }
+    }
+}
+
+void MainWindow::deleteNotification(int row)
+{
+    const auto notification = m_model->notificationAt(row);
+    if (!notification) {
+        return;
+    }
+    if (QMessageBox::question(this, QStringLiteral("Delete"), QStringLiteral("Delete selected notification?")) != QMessageBox::Yes) {
+        return;
+    }
+    m_controller->deleteNotification(notification->id);
+}
+
+void MainWindow::openGlobalSettings()
+{
+    GlobalSettingsDialog dialog(m_controller->settings(), this);
+    while (dialog.exec() == QDialog::Accepted) {
+        const auto result = m_controller->updateSettings(dialog.settings());
+        if (result.ok) {
+            break;
+        }
+        QMessageBox::critical(this, QStringLiteral("Save failed"), result.errorMessage);
+    }
+}
+
+bool MainWindow::saveEditorResult(const std::optional<QUuid> &existingId, NotificationEditorDialog &dialog)
+{
+    const auto notification = dialog.notification();
+    const auto result = existingId
+        ? m_controller->updateNotification(*existingId, notification)
+        : m_controller->addNotification(notification);
+    if (!result.ok) {
+        QMessageBox::critical(this, QStringLiteral("Save failed"), result.errorMessage);
+    }
+    return result.ok;
+}
+
+} // namespace smartalarm

@@ -30,7 +30,7 @@ jobs:
             installer_ext: app
           - os: ubuntu-22.04
             qt_host: linux
-            qt_arch: gcc_64
+            qt_arch: linux_gcc_64
             qt_tools: tools_ifw
             artifact_suffix: linux-x64
             installer_ext: run
@@ -53,6 +53,7 @@ jobs:
           target: 'desktop'
           arch: ${{ matrix.qt_arch }}
           cache: true
+          archives: 'qtbase qtmultimedia qtsvg'
           tools: ${{ matrix.qt_tools }}
 
       - name: Get version from tag

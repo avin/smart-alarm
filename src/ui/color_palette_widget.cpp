@@ -2,15 +2,29 @@
 
 #include "core/notification.h"
 
+#include <QPainter>
+
 namespace smartalarm {
+
+namespace {
+QIcon swatchIcon(const QString &color, bool selected)
+{
+    QPixmap pixmap(16, 16);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+    painter.fillRect(selected ? pixmap.rect().adjusted(1, 1, -1, -1) : pixmap.rect(), QColor(color));
+    return QIcon(pixmap);
+}
+}
 
 ColorPaletteWidget::ColorPaletteWidget(QWidget *parent)
     : QWidget(parent)
     , m_colors(defaultColors())
-    , m_layout(new QGridLayout(this))
+    , m_layout(new QHBoxLayout(this))
 {
     m_layout->setContentsMargins(0, 0, 0, 0);
-    m_layout->setSpacing(4);
+    m_layout->setSpacing(0);
     rebuild();
 }
 
@@ -51,16 +65,20 @@ void ColorPaletteWidget::rebuild()
         button->setFixedSize(24, 24);
         button->setToolTip(color);
         const bool selected = color.compare(m_color, Qt::CaseInsensitive) == 0;
-        button->setStyleSheet(QStringLiteral("QPushButton { background: %1; border: %2px solid %3; padding: 2px; }")
-            .arg(color)
-            .arg(selected ? 3 : 1)
-            .arg(selected ? QStringLiteral("#000000") : QStringLiteral("#808080")));
+        button->setIcon(swatchIcon(color, selected));
+        button->setIconSize(QSize(16, 16));
+        button->setStyleSheet(selected
+            ? QStringLiteral("QPushButton { background: #FFFFFF; border: 2px solid #000000; padding: 2px; }")
+            : QStringLiteral("QPushButton { background: %1; border: 1px solid #808080; padding: 2px; }").arg(color));
         connect(button, &QPushButton::clicked, this, [this, color] {
             m_color = color;
             rebuild();
             emit changed();
         });
-        m_layout->addWidget(button, i / 10, i % 10);
+        if (i > 0) {
+            m_layout->addStretch(1);
+        }
+        m_layout->addWidget(button);
     }
 }
 

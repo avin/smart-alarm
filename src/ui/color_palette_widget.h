@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QGridLayout>
+#include <QHBoxLayout>
 #include <QPushButton>
 #include <QWidget>
 
@@ -22,7 +22,7 @@ private:
     void rebuild();
     QString m_color = QStringLiteral("#D94841");
     QStringList m_colors;
-    QGridLayout *m_layout = nullptr;
+    QHBoxLayout *m_layout = nullptr;
 };
 
 } // namespace smartalarm

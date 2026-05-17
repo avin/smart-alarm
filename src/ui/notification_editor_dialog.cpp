@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSlider>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -22,6 +23,7 @@ namespace smartalarm {
 
 namespace {
 constexpr int CustomSoundIndex = 6;
+constexpr int TabContentMargin = 8;
 
 QLabel *createFieldLabel(const QString &text, QWidget *parent)
 {
@@ -85,6 +87,17 @@ void setCollapsibleExpanded(QToolButton *toggle, QWidget *content, bool expanded
     content->setVisible(expanded);
     toggle->setArrowType(expanded ? Qt::DownArrow : Qt::RightArrow);
 }
+
+QWidget *createScrollableTab(QWidget *content, QWidget *parent)
+{
+    auto *scrollArea = new QScrollArea(parent);
+    scrollArea->setWidget(content);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    content->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    return scrollArea;
+}
 }
 
 NotificationEditorDialog::NotificationEditorDialog(Notification notification, audio::PreviewPlayer *previewPlayer, bool previewEnabled, QWidget *parent)
@@ -102,10 +115,11 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
     mainLayout->setSpacing(6);
 
     auto *top = new QHBoxLayout;
+    top->setSpacing(6);
     m_message = new QLineEdit(this);
     m_enabled = new QCheckBox(QStringLiteral("Enabled"), this);
     top->addWidget(withVerticalLabel(QStringLiteral("Message"), m_message, this), 1);
-    top->addWidget(m_enabled);
+    top->addWidget(withVerticalLabel(QString(), m_enabled, this));
     mainLayout->addLayout(top);
 
     m_tabs = new QTabWidget(this);
@@ -172,23 +186,24 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
 
 QWidget *NotificationEditorDialog::createOnceTab()
 {
-    auto *widget = new QWidget(this);
+    auto *widget = new QWidget;
     auto *layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(TabContentMargin, TabContentMargin, TabContentMargin, TabContentMargin);
     layout->setSpacing(6);
     m_onceDate = new DateEdit(widget);
     m_onceTime = new TimeEdit(widget);
     addLabeledField(layout, QStringLiteral("Date"), m_onceDate, widget);
     addLabeledField(layout, QStringLiteral("Time"), m_onceTime, widget);
     layout->addStretch(1);
-    return widget;
+    layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    return createScrollableTab(widget, this);
 }
 
 QWidget *NotificationEditorDialog::createWeeklyTab()
 {
-    auto *widget = new QWidget(this);
+    auto *widget = new QWidget;
     auto *layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(TabContentMargin, TabContentMargin, TabContentMargin, TabContentMargin);
     layout->setSpacing(6);
     m_weeklyDays = new DayOfWeekSelector(widget);
     m_weeklyTime = new TimeEdit(widget);
@@ -204,14 +219,15 @@ QWidget *NotificationEditorDialog::createWeeklyTab()
     addLabeledField(layout, QStringLiteral("Time"), m_weeklyTime, widget);
     layout->addWidget(createCollapsibleSection(QStringLiteral("Date range (optional)"), m_weeklyRangeContent, m_weeklyRangeToggle, widget));
     layout->addStretch(1);
-    return widget;
+    layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    return createScrollableTab(widget, this);
 }
 
 QWidget *NotificationEditorDialog::createNthWeekTab()
 {
-    auto *widget = new QWidget(this);
+    auto *widget = new QWidget;
     auto *layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(TabContentMargin, TabContentMargin, TabContentMargin, TabContentMargin);
     layout->setSpacing(6);
     m_nthEvery = new QSpinBox(widget);
     m_nthEvery->setRange(1, 999);
@@ -228,14 +244,15 @@ QWidget *NotificationEditorDialog::createNthWeekTab()
     addLabeledField(layout, QStringLiteral("Reference date"), m_nthReference, widget);
     addLabeledField(layout, QStringLiteral("End date (optional)"), m_nthEnd, widget);
     layout->addStretch(1);
-    return widget;
+    layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    return createScrollableTab(widget, this);
 }
 
 QWidget *NotificationEditorDialog::createIntervalTab()
 {
-    auto *widget = new QWidget(this);
+    auto *widget = new QWidget;
     auto *layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(TabContentMargin, TabContentMargin, TabContentMargin, TabContentMargin);
     layout->setSpacing(6);
     m_intervalEvery = new QSpinBox(widget);
     m_intervalEvery->setRange(1, 1440);
@@ -247,8 +264,9 @@ QWidget *NotificationEditorDialog::createIntervalTab()
     auto *countRow = new QHBoxLayout(countRowWidget);
     countRow->setContentsMargins(0, 0, 0, 0);
     countRow->setSpacing(6);
-    countRow->addWidget(m_countFromTrigger);
-    countRow->addWidget(m_countFromConfirmation);
+    countRow->addWidget(m_countFromTrigger, 0, Qt::AlignLeft);
+    countRow->addWidget(m_countFromConfirmation, 0, Qt::AlignLeft);
+    countRow->addStretch(1);
     m_intervalSnooze = new QSpinBox(widget);
     m_intervalSnooze->setRange(0, 1440);
     m_intervalLimitContent = new QWidget(widget);
@@ -268,7 +286,8 @@ QWidget *NotificationEditorDialog::createIntervalTab()
     addLabeledField(layout, QStringLiteral("Snooze (minutes, 0 = use global default)"), m_intervalSnooze, widget);
     layout->addWidget(createCollapsibleSection(QStringLiteral("Schedule (optional)"), m_intervalLimitContent, m_intervalLimitToggle, widget));
     layout->addStretch(1);
-    return widget;
+    layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    return createScrollableTab(widget, this);
 }
 
 void NotificationEditorDialog::loadFromNotification(const Notification &notification)

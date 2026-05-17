@@ -4,6 +4,7 @@
 #include "audio/sound_preset_registry.h"
 #include "audio/tone_generator.h"
 #include "core/notification_validator.h"
+#include "ui/app_icon.h"
 #include "ui/color_palette_widget.h"
 #include "ui/date_edit.h"
 #include "ui/day_of_week_selector.h"
@@ -137,6 +138,7 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
     , m_previewEnabled(previewEnabled)
 {
     setWindowTitle(QStringLiteral("Notification"));
+    setWindowIcon(appicon::alarm());
     resize(640, 620);
     setMinimumSize(560, 520);
 

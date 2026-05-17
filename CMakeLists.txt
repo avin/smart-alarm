@@ -42,6 +42,7 @@ set(SMART_ALARM_CORE_SOURCES
     src/ui/notification_editor_dialog.cpp
     src/ui/global_settings_dialog.cpp
     src/ui/lucide_icons.cpp
+    src/ui/app_icon.cpp
     src/ui/main_window.cpp
     src/ui/tray_controller.cpp
 )

@@ -1,5 +1,6 @@
 #include "ui/main_window.h"
 
+#include "ui/app_icon.h"
 #include "ui/global_settings_dialog.h"
 #include "ui/lucide_icons.h"
 #include "ui/notification_actions_delegate.h"
@@ -32,6 +33,7 @@ MainWindow::MainWindow(AppController *controller, audio::AudioQueue *audioQueue,
     , m_central(new QWidget(this))
 {
     setWindowTitle(QStringLiteral("Smart Alarm"));
+    setWindowIcon(appicon::alarm());
     resize(900, 520);
     setMinimumSize(720, 420);
     auto *layout = new QVBoxLayout(m_central);

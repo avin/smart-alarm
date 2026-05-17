@@ -1,5 +1,6 @@
 #include "ui/tray_controller.h"
 
+#include "ui/app_icon.h"
 #include "ui/lucide_icons.h"
 #include "ui/main_window.h"
 
@@ -81,7 +82,7 @@ void TrayController::hide()
 
 QIcon TrayController::makeIcon(bool enabled) const
 {
-    const QIcon baseIcon(QStringLiteral(":/icons/tray-alarm.svg"));
+    const QIcon baseIcon = appicon::alarm();
     if (enabled) {
         return baseIcon;
     }

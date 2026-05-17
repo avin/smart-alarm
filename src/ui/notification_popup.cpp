@@ -1,5 +1,6 @@
 #include "ui/notification_popup.h"
 
+#include "ui/app_icon.h"
 #include "ui/slide_to_dismiss.h"
 
 #include <QHBoxLayout>
@@ -14,6 +15,7 @@ NotificationPopup::NotificationPopup(Notification notification, QWidget *parent)
     , m_container(new QWidget(this))
 {
     setAttribute(Qt::WA_DeleteOnClose, false);
+    setWindowIcon(appicon::alarm());
     setFixedWidth(360);
     auto *outer = new QVBoxLayout(this);
     outer->setContentsMargins(0, 0, 0, 0);

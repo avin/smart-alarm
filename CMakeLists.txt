@@ -9,6 +9,7 @@ set(CMAKE_AUTOUIC OFF)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 6.8.3 REQUIRED COMPONENTS Core Gui Widgets Multimedia Test)
+include(GNUInstallDirs)
 
 if(MSVC)
     add_compile_options(/Zc:__cplusplus)
@@ -53,6 +54,26 @@ target_link_libraries(smart_alarm_lib PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6
 
 add_executable(SmartAlarm src/main.cpp src/resources.qrc)
 target_link_libraries(SmartAlarm PRIVATE smart_alarm_lib)
+set_target_properties(SmartAlarm PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_BUNDLE_NAME "Smart Alarm"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.smartalarm.SmartAlarm"
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+)
+
+install(TARGETS SmartAlarm
+    BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+qt_generate_deploy_app_script(
+    TARGET SmartAlarm
+    OUTPUT_SCRIPT SMART_ALARM_DEPLOY_SCRIPT
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(SCRIPT ${SMART_ALARM_DEPLOY_SCRIPT})
 
 enable_testing()
 add_subdirectory(tests)

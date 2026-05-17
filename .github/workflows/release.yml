@@ -1,0 +1,156 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-installer:
+    name: Build ${{ matrix.artifact_suffix }} installer
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            qt_host: windows
+            qt_arch: win64_mingw
+            qt_tools: tools_ifw tools_mingw1310
+            artifact_suffix: windows-x64
+            installer_ext: exe
+          - os: macos-13
+            qt_host: mac
+            qt_arch: clang_64
+            qt_tools: tools_ifw
+            artifact_suffix: macos-x64
+            installer_ext: app
+          - os: ubuntu-22.04
+            qt_host: linux
+            qt_arch: gcc_64
+            qt_tools: tools_ifw
+            artifact_suffix: linux-x64
+            installer_ext: run
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgl1-mesa-dev libxkbcommon-x11-0 libxcb-cursor0
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: ${{ matrix.qt_host }}
+          target: 'desktop'
+          arch: ${{ matrix.qt_arch }}
+          cache: true
+          tools: ${{ matrix.qt_tools }}
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          "VERSION=$version" >> $env:GITHUB_OUTPUT
+          "Version: $version"
+        if: runner.os == 'Windows'
+
+      - name: Get version from tag
+        id: get_version_unix
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$version" >> "$GITHUB_OUTPUT"
+          echo "Version: $version"
+        if: runner.os != 'Windows'
+
+      - name: Configure CMake
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/package-root"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: ctest --test-dir build --build-config Release --output-on-failure
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+      - name: Install deploy tree
+        run: cmake --install build --config Release
+
+      - name: Prepare installer package
+        run: |
+          $version = "${{ steps.get_version.outputs.VERSION }}"
+          ./scripts/prepare_installer_metadata.ps1 -Version $version
+          $dataDir = "installer/packages/com.smartalarm.smartalarm/data"
+          if (Test-Path $dataDir) {
+              Remove-Item -Recurse -Force $dataDir
+          }
+          New-Item -ItemType Directory -Force -Path $dataDir
+          Copy-Item -Recurse "package-root/*" $dataDir/
+        if: runner.os == 'Windows'
+
+      - name: Prepare installer package
+        run: |
+          version="${{ steps.get_version_unix.outputs.VERSION }}"
+          pwsh ./scripts/prepare_installer_metadata.ps1 -Version "$version"
+          data_dir="installer/packages/com.smartalarm.smartalarm/data"
+          rm -rf "$data_dir"
+          mkdir -p "$data_dir"
+          cp -a package-root/. "$data_dir/"
+        if: runner.os != 'Windows'
+
+      - name: Create installer
+        run: |
+          $version = "${{ steps.get_version.outputs.VERSION }}"
+          New-Item -ItemType Directory -Force -Path "installer-output"
+          $installerPath = "installer-output/SmartAlarmInstaller-$version-${{ matrix.artifact_suffix }}.${{ matrix.installer_ext }}"
+          binarycreator --offline-only --config "installer/config/config.xml" --packages "installer/packages" $installerPath
+        if: runner.os == 'Windows'
+
+      - name: Create installer
+        run: |
+          version="${{ steps.get_version_unix.outputs.VERSION }}"
+          mkdir -p installer-output
+          installer_path="installer-output/SmartAlarmInstaller-$version-${{ matrix.artifact_suffix }}.${{ matrix.installer_ext }}"
+          binarycreator --offline-only --config installer/config/config.xml --packages installer/packages "$installer_path"
+          if [ -d "$installer_path" ]; then
+            ditto -c -k --sequesterRsrc --keepParent "$installer_path" "$installer_path.zip"
+            rm -rf "$installer_path"
+          fi
+        if: runner.os != 'Windows'
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartAlarmInstaller-${{ matrix.artifact_suffix }}
+          path: |
+            installer-output/*
+
+  release:
+    name: Publish draft release
+    runs-on: ubuntu-latest
+    needs: build-installer
+    steps:
+      - name: Download installers
+        uses: actions/download-artifact@v4
+        with:
+          path: installer-output
+          merge-multiple: true
+
+      - name: Create draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
+            --notes "Draft release for Smart Alarm." \
+            --draft \
+            installer-output/*

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Smart Alarm</DisplayName>
+    <Description>Installs the Smart Alarm application</Description>
+    <Version>0.1.0</Version>
+    <ReleaseDate>2026-05-18</ReleaseDate>
+    <Default>true</Default>
+    <Script>installscript.qs</Script>
+</Package>

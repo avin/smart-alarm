@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>SmartAlarm</Name>
+    <Version>0.1.0</Version>
+    <Title>Smart Alarm</Title>
+    <Publisher>SmartAlarm</Publisher>
+    <StartMenuDir>Smart Alarm</StartMenuDir>
+    <ControlScript>controller.qs</ControlScript>
+    <TargetDir>@HomeDir@/Applications/SmartAlarm</TargetDir>
+    <RemoveTargetDir>false</RemoveTargetDir>
+    <RemoteRepositories>
+    </RemoteRepositories>
+</Installer>

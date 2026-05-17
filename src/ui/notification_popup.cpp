@@ -37,7 +37,7 @@ NotificationPopup::NotificationPopup(Notification notification, QWidget *parent)
         m_blink = !m_blink;
         updateBorder();
     });
-    m_blinkTimer.start(500);
+    m_blinkTimer.start(250);
     updateBorder();
 }
 
@@ -49,7 +49,7 @@ QUuid NotificationPopup::notificationId() const
 void NotificationPopup::updateBorder()
 {
     const QColor color(m_notification.color);
-    const auto border = m_blink ? color.name(QColor::HexRgb) : color.lighter(165).name(QColor::HexRgb);
+    const auto border = m_blink ? color.name(QColor::HexRgb) : QStringLiteral("#ffffff");
     m_container->setStyleSheet(QStringLiteral("QWidget { background: #ffffff; border: 4px solid %1; } QLabel { border: none; } QPushButton { border: 1px solid #8a8a8a; padding: 3px 10px; }").arg(border));
 }
 

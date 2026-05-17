@@ -37,6 +37,7 @@ set(SMART_ALARM_CORE_SOURCES
     src/ui/notification_popup.cpp
     src/ui/popup_manager.cpp
     src/ui/notification_table_model.cpp
+    src/ui/notification_state_delegate.cpp
     src/ui/notification_actions_delegate.cpp
     src/ui/notification_editor_dialog.cpp
     src/ui/global_settings_dialog.cpp

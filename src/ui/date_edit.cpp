@@ -44,7 +44,7 @@ void DateEdit::setDate(std::optional<QDate> date)
 
 void DateEdit::setInvalid(bool invalid)
 {
-    m_edit->setStyleSheet(invalid ? QStringLiteral("QLineEdit { border: 1px solid #D94841; }") : QString());
+    Q_UNUSED(invalid);
 }
 
 bool DateEdit::eventFilter(QObject *watched, QEvent *event)

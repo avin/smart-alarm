@@ -3,6 +3,7 @@
 #include "ui/global_settings_dialog.h"
 #include "ui/notification_actions_delegate.h"
 #include "ui/notification_editor_dialog.h"
+#include "ui/notification_state_delegate.h"
 
 #include <QCloseEvent>
 #include <QHeaderView>
@@ -92,7 +93,7 @@ void MainWindow::createTable()
     m_model = new NotificationTableModel(m_controller, this);
     m_table->setModel(m_model);
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_table->setSelectionMode(QAbstractItemView::NoSelection);
     m_table->setAlternatingRowColors(true);
     m_table->verticalHeader()->setVisible(false);
     m_table->horizontalHeader()->setStretchLastSection(false);
@@ -103,6 +104,9 @@ void MainWindow::createTable()
     m_table->horizontalHeader()->setSectionResizeMode(NotificationTableModel::ScheduleColumn, QHeaderView::Stretch);
     auto *delegate = new NotificationActionsDelegate(this);
     m_table->setItemDelegateForColumn(NotificationTableModel::ActionsColumn, delegate);
+    auto *stateDelegate = new NotificationStateDelegate(this);
+    m_table->setItemDelegateForColumn(NotificationTableModel::EnabledColumn, stateDelegate);
+    m_table->setItemDelegateForColumn(NotificationTableModel::ColorColumn, stateDelegate);
     connect(delegate, &NotificationActionsDelegate::editRequested, this, &MainWindow::editNotification);
     connect(delegate, &NotificationActionsDelegate::deleteRequested, this, &MainWindow::deleteNotification);
     qobject_cast<QVBoxLayout *>(m_central->layout())->addWidget(m_table, 1);

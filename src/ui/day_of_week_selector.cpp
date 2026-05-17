@@ -44,10 +44,11 @@ void DayOfWeekSelector::setSelectedDays(const QVector<Weekday> &days)
 
 void DayOfWeekSelector::setInvalid(bool invalid)
 {
+    Q_UNUSED(invalid);
     for (auto *button : m_buttons) {
         button->setStyleSheet(button->isChecked()
             ? QStringLiteral("QPushButton:checked { background: #0078d7; color: white; }")
-            : (invalid ? QStringLiteral("QPushButton { border: 1px solid #D94841; }") : QString()));
+            : QString());
     }
 }
 

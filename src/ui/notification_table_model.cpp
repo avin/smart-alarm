@@ -77,6 +77,7 @@ QVariant NotificationTableModel::headerData(int section, Qt::Orientation orienta
 Qt::ItemFlags NotificationTableModel::flags(const QModelIndex &index) const
 {
     auto flags = QAbstractTableModel::flags(index);
+    flags &= ~Qt::ItemIsSelectable;
     if (index.column() == EnabledColumn) {
         flags |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
     }

@@ -36,13 +36,17 @@ QLabel *createFieldLabel(const QString &text, QWidget *parent)
     return label;
 }
 
-QWidget *withVerticalLabel(const QString &labelText, QWidget *field, QWidget *parent)
+QWidget *withVerticalLabel(const QString &labelText, QWidget *field, QWidget *parent, QLabel **labelOut = nullptr)
 {
     auto *container = new QWidget(parent);
     auto *layout = new QVBoxLayout(container);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(2);
-    layout->addWidget(createFieldLabel(labelText, container));
+    auto *label = createFieldLabel(labelText, container);
+    if (labelOut) {
+        *labelOut = label;
+    }
+    layout->addWidget(label);
     layout->addWidget(field);
     return container;
 }
@@ -50,6 +54,31 @@ QWidget *withVerticalLabel(const QString &labelText, QWidget *field, QWidget *pa
 void addLabeledField(QVBoxLayout *layout, const QString &labelText, QWidget *field, QWidget *parent)
 {
     layout->addWidget(withVerticalLabel(labelText, field, parent));
+}
+
+QWidget *withTwoVerticalFields(
+    const QString &firstLabel,
+    QWidget *firstField,
+    QLabel **firstLabelOut,
+    const QString &secondLabel,
+    QWidget *secondField,
+    QLabel **secondLabelOut,
+    QWidget *parent)
+{
+    auto *container = new QWidget(parent);
+    auto *layout = new QHBoxLayout(container);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(6);
+    layout->addWidget(withVerticalLabel(firstLabel, firstField, container, firstLabelOut), 1);
+    layout->addWidget(withVerticalLabel(secondLabel, secondField, container, secondLabelOut), 1);
+    return container;
+}
+
+void setLabelInvalid(QLabel *label, bool invalid)
+{
+    if (label) {
+        label->setStyleSheet(invalid ? QStringLiteral("QLabel { color: #D94841; }") : QString());
+    }
 }
 
 QWidget *createCollapsibleSection(const QString &title, QWidget *content, QToolButton *&toggle, QWidget *parent)
@@ -118,7 +147,7 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
     top->setSpacing(6);
     m_message = new QLineEdit(this);
     m_enabled = new QCheckBox(QStringLiteral("Enabled"), this);
-    top->addWidget(withVerticalLabel(QStringLiteral("Message"), m_message, this), 1);
+    top->addWidget(withVerticalLabel(QStringLiteral("Message"), m_message, this, &m_messageLabel), 1);
     top->addWidget(withVerticalLabel(QString(), m_enabled, this));
     mainLayout->addLayout(top);
 
@@ -159,7 +188,7 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
     m_help = new QPushButton(QStringLiteral("?"), this);
     customRow->addWidget(m_customPattern, 1);
     customRow->addWidget(m_help);
-    m_customPatternContainer = withVerticalLabel(QStringLiteral("Custom pattern"), customRowWidget, this);
+    m_customPatternContainer = withVerticalLabel(QStringLiteral("Custom pattern"), customRowWidget, this, &m_customPatternLabel);
     common->addWidget(m_customPatternContainer);
 
     m_volume = new QSlider(Qt::Horizontal, this);
@@ -192,8 +221,7 @@ QWidget *NotificationEditorDialog::createOnceTab()
     layout->setSpacing(6);
     m_onceDate = new DateEdit(widget);
     m_onceTime = new TimeEdit(widget);
-    addLabeledField(layout, QStringLiteral("Date"), m_onceDate, widget);
-    addLabeledField(layout, QStringLiteral("Time"), m_onceTime, widget);
+    layout->addWidget(withTwoVerticalFields(QStringLiteral("Date"), m_onceDate, &m_onceDateLabel, QStringLiteral("Time"), m_onceTime, &m_onceTimeLabel, widget));
     layout->addStretch(1);
     layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
     return createScrollableTab(widget, this);
@@ -215,8 +243,8 @@ QWidget *NotificationEditorDialog::createWeeklyTab()
     m_weeklyEnd = new DateEdit(m_weeklyRangeContent);
     addLabeledField(rangeLayout, QStringLiteral("Start date"), m_weeklyStart, m_weeklyRangeContent);
     addLabeledField(rangeLayout, QStringLiteral("End date"), m_weeklyEnd, m_weeklyRangeContent);
-    addLabeledField(layout, QStringLiteral("Days"), m_weeklyDays, widget);
-    addLabeledField(layout, QStringLiteral("Time"), m_weeklyTime, widget);
+    layout->addWidget(withVerticalLabel(QStringLiteral("Days"), m_weeklyDays, widget, &m_weeklyDaysLabel));
+    layout->addWidget(withVerticalLabel(QStringLiteral("Time"), m_weeklyTime, widget, &m_weeklyTimeLabel));
     layout->addWidget(createCollapsibleSection(QStringLiteral("Date range (optional)"), m_weeklyRangeContent, m_weeklyRangeToggle, widget));
     layout->addStretch(1);
     layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
@@ -240,8 +268,8 @@ QWidget *NotificationEditorDialog::createNthWeekTab()
     m_nthEnd = new DateEdit(widget);
     addLabeledField(layout, QStringLiteral("Every"), m_nthEvery, widget);
     addLabeledField(layout, QStringLiteral("Weeks on"), m_nthWeekday, widget);
-    addLabeledField(layout, QStringLiteral("Time"), m_nthTime, widget);
-    addLabeledField(layout, QStringLiteral("Reference date"), m_nthReference, widget);
+    layout->addWidget(withVerticalLabel(QStringLiteral("Time"), m_nthTime, widget, &m_nthTimeLabel));
+    layout->addWidget(withVerticalLabel(QStringLiteral("Reference date"), m_nthReference, widget, &m_nthReferenceLabel));
     addLabeledField(layout, QStringLiteral("End date (optional)"), m_nthEnd, widget);
     layout->addStretch(1);
     layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
@@ -276,12 +304,11 @@ QWidget *NotificationEditorDialog::createIntervalTab()
     m_intervalDays = new DayOfWeekSelector(m_intervalLimitContent);
     m_intervalStart = new DateEdit(m_intervalLimitContent);
     m_intervalEnd = new DateEdit(m_intervalLimitContent);
-    addLabeledField(limitLayout, QStringLiteral("Days"), m_intervalDays, m_intervalLimitContent);
+    limitLayout->addWidget(withVerticalLabel(QStringLiteral("Days"), m_intervalDays, m_intervalLimitContent, &m_intervalDaysLabel));
     addLabeledField(limitLayout, QStringLiteral("Start date"), m_intervalStart, m_intervalLimitContent);
     addLabeledField(limitLayout, QStringLiteral("End date"), m_intervalEnd, m_intervalLimitContent);
     addLabeledField(layout, QStringLiteral("Every minutes"), m_intervalEvery, widget);
-    addLabeledField(layout, QStringLiteral("From"), m_intervalFrom, widget);
-    addLabeledField(layout, QStringLiteral("To"), m_intervalTo, widget);
+    layout->addWidget(withTwoVerticalFields(QStringLiteral("From"), m_intervalFrom, &m_intervalFromLabel, QStringLiteral("To"), m_intervalTo, &m_intervalToLabel, widget));
     addLabeledField(layout, QStringLiteral("Count from"), countRowWidget, widget);
     addLabeledField(layout, QStringLiteral("Snooze (minutes, 0 = use global default)"), m_intervalSnooze, widget);
     layout->addWidget(createCollapsibleSection(QStringLiteral("Schedule (optional)"), m_intervalLimitContent, m_intervalLimitToggle, widget));
@@ -416,17 +443,17 @@ void NotificationEditorDialog::accept()
 
 bool NotificationEditorDialog::validateAndMark()
 {
-    m_message->setStyleSheet({});
-    m_onceDate->setInvalid(false);
-    m_onceTime->setInvalid(false);
-    m_weeklyDays->setInvalid(false);
-    m_weeklyTime->setInvalid(false);
-    m_nthTime->setInvalid(false);
-    m_nthReference->setInvalid(false);
-    m_intervalFrom->setInvalid(false);
-    m_intervalTo->setInvalid(false);
-    m_intervalDays->setInvalid(false);
-    m_customPattern->setStyleSheet({});
+    setLabelInvalid(m_messageLabel, false);
+    setLabelInvalid(m_onceDateLabel, false);
+    setLabelInvalid(m_onceTimeLabel, false);
+    setLabelInvalid(m_weeklyDaysLabel, false);
+    setLabelInvalid(m_weeklyTimeLabel, false);
+    setLabelInvalid(m_nthTimeLabel, false);
+    setLabelInvalid(m_nthReferenceLabel, false);
+    setLabelInvalid(m_intervalFromLabel, false);
+    setLabelInvalid(m_intervalToLabel, false);
+    setLabelInvalid(m_intervalDaysLabel, false);
+    setLabelInvalid(m_customPatternLabel, false);
 
     const auto candidate = buildNotification();
     auto result = NotificationValidator::validate(candidate);
@@ -437,17 +464,17 @@ bool NotificationEditorDialog::validateAndMark()
         }
     }
     for (const auto &error : result.errors) {
-        if (error.fieldPath == QStringLiteral("message")) m_message->setStyleSheet(QStringLiteral("QLineEdit { border: 1px solid #D94841; }"));
-        else if (error.fieldPath == QStringLiteral("schedule.once.date")) m_onceDate->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.once.time")) m_onceTime->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.weekly.days")) m_weeklyDays->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.weekly.time")) m_weeklyTime->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.nthWeek.time")) m_nthTime->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.nthWeek.referenceDate")) m_nthReference->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.interval.from")) m_intervalFrom->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.interval.to")) m_intervalTo->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("schedule.interval.schedule.days")) m_intervalDays->setInvalid(true);
-        else if (error.fieldPath == QStringLiteral("sound.custom.pattern")) m_customPattern->setStyleSheet(QStringLiteral("QLineEdit { border: 1px solid #D94841; }"));
+        if (error.fieldPath == QStringLiteral("message")) setLabelInvalid(m_messageLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.once.date")) setLabelInvalid(m_onceDateLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.once.time")) setLabelInvalid(m_onceTimeLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.weekly.days")) setLabelInvalid(m_weeklyDaysLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.weekly.time")) setLabelInvalid(m_weeklyTimeLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.nthWeek.time")) setLabelInvalid(m_nthTimeLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.nthWeek.referenceDate")) setLabelInvalid(m_nthReferenceLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.interval.from")) setLabelInvalid(m_intervalFromLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.interval.to")) setLabelInvalid(m_intervalToLabel, true);
+        else if (error.fieldPath == QStringLiteral("schedule.interval.schedule.days")) setLabelInvalid(m_intervalDaysLabel, true);
+        else if (error.fieldPath == QStringLiteral("sound.custom.pattern")) setLabelInvalid(m_customPatternLabel, true);
     }
     if (!result.ok()) {
         QMessageBox::warning(this, QStringLiteral("Validation"), QStringLiteral("Please fix highlighted fields."));
@@ -477,10 +504,10 @@ void NotificationEditorDialog::playPreview()
     }
     const auto parsed = audio::SoundPatternParser::parse(currentPattern());
     if (!parsed.ok) {
-        m_customPattern->setStyleSheet(QStringLiteral("QLineEdit { border: 1px solid #D94841; }"));
+        setLabelInvalid(m_customPatternLabel, true);
         return;
     }
-    m_customPattern->setStyleSheet({});
+    setLabelInvalid(m_customPatternLabel, false);
     m_previewPlayer->playSegments(parsed.segments, m_volume->value());
 }
 

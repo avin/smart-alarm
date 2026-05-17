@@ -52,7 +52,7 @@ void TimeEdit::setTime(std::optional<QTime> time)
 
 void TimeEdit::setInvalid(bool invalid)
 {
-    m_edit->setStyleSheet(invalid ? QStringLiteral("QLineEdit { border: 1px solid #D94841; }") : QString());
+    Q_UNUSED(invalid);
 }
 
 bool TimeEdit::eventFilter(QObject *watched, QEvent *event)

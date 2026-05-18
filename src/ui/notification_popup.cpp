@@ -9,6 +9,12 @@
 
 namespace smartalarm {
 
+namespace {
+constexpr int PopupWidth = 380;
+constexpr int ContentMargin = 20;
+constexpr int BorderWidth = 8;
+}
+
 NotificationPopup::NotificationPopup(Notification notification, QWidget *parent)
     : QWidget(parent, Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint)
     , m_notification(std::move(notification))
@@ -16,13 +22,13 @@ NotificationPopup::NotificationPopup(Notification notification, QWidget *parent)
 {
     setAttribute(Qt::WA_DeleteOnClose, false);
     setWindowIcon(appicon::alarm());
-    setFixedWidth(360);
+    setFixedWidth(PopupWidth);
     auto *outer = new QVBoxLayout(this);
     outer->setContentsMargins(0, 0, 0, 0);
     outer->addWidget(m_container);
 
     auto *layout = new QVBoxLayout(m_container);
-    layout->setContentsMargins(10, 10, 10, 10);
+    layout->setContentsMargins(ContentMargin, ContentMargin, ContentMargin, ContentMargin);
     layout->setSpacing(8);
     auto *message = new QLabel(m_notification.message, m_container);
     message->setWordWrap(true);
@@ -56,7 +62,9 @@ QUuid NotificationPopup::notificationId() const
 
 void NotificationPopup::updateBorder(const QColor &borderColor)
 {
-    m_container->setStyleSheet(QStringLiteral("QWidget { background: #ffffff; border: 4px solid %1; } QLabel { border: none; } QPushButton { border: 1px solid #8a8a8a; padding: 3px 10px; }").arg(borderColor.name(QColor::HexRgb)));
+    m_container->setStyleSheet(QStringLiteral("QWidget { background: #ffffff; border: %1px solid %2; } QLabel { border: none; } QPushButton { border: 1px solid #8a8a8a; padding: 3px 10px; }")
+        .arg(BorderWidth)
+        .arg(borderColor.name(QColor::HexRgb)));
 }
 
 } // namespace smartalarm

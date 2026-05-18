@@ -115,7 +115,7 @@ void MainWindow::createTable()
     m_table->horizontalHeader()->setStretchLastSection(false);
     m_table->setColumnWidth(NotificationTableModel::EnabledColumn, 36);
     m_table->setColumnWidth(NotificationTableModel::ColorColumn, 42);
-    m_table->setColumnWidth(NotificationTableModel::ActionsColumn, 86);
+    m_table->setColumnWidth(NotificationTableModel::ActionsColumn, 64);
     m_table->horizontalHeader()->setSectionResizeMode(NotificationTableModel::MessageColumn, QHeaderView::Stretch);
     m_table->horizontalHeader()->setSectionResizeMode(NotificationTableModel::ScheduleColumn, QHeaderView::Stretch);
     auto *delegate = new NotificationActionsDelegate(this);

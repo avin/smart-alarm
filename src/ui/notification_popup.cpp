@@ -35,12 +35,18 @@ NotificationPopup::NotificationPopup(Notification notification, QWidget *parent)
     layout->addWidget(snooze, 0, Qt::AlignRight);
     connect(slide, &SlideToDismiss::dismissed, this, [this] { emit dismissed(m_notification.id); });
     connect(snooze, &QPushButton::clicked, this, [this] { emit snoozed(m_notification.id); });
-    connect(&m_blinkTimer, &QTimer::timeout, this, [this] {
-        m_blink = !m_blink;
-        updateBorder();
+
+    const QColor borderColor(m_notification.color);
+    m_borderAnimation.setDuration(500);
+    m_borderAnimation.setLoopCount(-1);
+    m_borderAnimation.setKeyValueAt(0.0, borderColor);
+    m_borderAnimation.setKeyValueAt(0.5, QColor(Qt::white));
+    m_borderAnimation.setKeyValueAt(1.0, borderColor);
+    connect(&m_borderAnimation, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+        updateBorder(value.value<QColor>());
     });
-    m_blinkTimer.start(250);
-    updateBorder();
+    updateBorder(borderColor);
+    m_borderAnimation.start();
 }
 
 QUuid NotificationPopup::notificationId() const
@@ -48,11 +54,9 @@ QUuid NotificationPopup::notificationId() const
     return m_notification.id;
 }
 
-void NotificationPopup::updateBorder()
+void NotificationPopup::updateBorder(const QColor &borderColor)
 {
-    const QColor color(m_notification.color);
-    const auto border = m_blink ? color.name(QColor::HexRgb) : QStringLiteral("#ffffff");
-    m_container->setStyleSheet(QStringLiteral("QWidget { background: #ffffff; border: 4px solid %1; } QLabel { border: none; } QPushButton { border: 1px solid #8a8a8a; padding: 3px 10px; }").arg(border));
+    m_container->setStyleSheet(QStringLiteral("QWidget { background: #ffffff; border: 4px solid %1; } QLabel { border: none; } QPushButton { border: 1px solid #8a8a8a; padding: 3px 10px; }").arg(borderColor.name(QColor::HexRgb)));
 }
 
 } // namespace smartalarm

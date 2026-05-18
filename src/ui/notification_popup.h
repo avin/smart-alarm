@@ -2,8 +2,9 @@
 
 #include "core/notification.h"
 
+#include <QColor>
 #include <QLabel>
-#include <QTimer>
+#include <QVariantAnimation>
 #include <QWidget>
 
 namespace smartalarm {
@@ -22,12 +23,11 @@ signals:
     void snoozed(const QUuid &id);
 
 private:
-    void updateBorder();
+    void updateBorder(const QColor &borderColor);
 
     Notification m_notification;
     QWidget *m_container = nullptr;
-    QTimer m_blinkTimer;
-    bool m_blink = false;
+    QVariantAnimation m_borderAnimation;
 };
 
 } // namespace smartalarm

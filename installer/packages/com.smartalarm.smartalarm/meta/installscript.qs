@@ -72,6 +72,13 @@ Component.prototype.createOperations = function()
             "workingDirectory=@TargetDir@/bin",
             "iconPath=@TargetDir@/bin/SmartAlarm.exe"
         );
+        component.addOperation(
+            "CreateShortcut",
+            "@TargetDir@/bin/SmartAlarm.exe",
+            "@UserStartMenuProgramsPath@/Startup/Smart Alarm.lnk",
+            "workingDirectory=@TargetDir@/bin",
+            "iconPath=@TargetDir@/bin/SmartAlarm.exe"
+        );
     } else if (isLinux()) {
         component.addOperation(
             "CreateShortcut",

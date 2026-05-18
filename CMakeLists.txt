@@ -15,6 +15,12 @@ if(MSVC)
     add_compile_options(/Zc:__cplusplus)
 endif()
 
+set(SMART_ALARM_WINDOWS_RESOURCES)
+if(WIN32)
+    enable_language(RC)
+    set(SMART_ALARM_WINDOWS_RESOURCES src/assets/windows/app.rc)
+endif()
+
 set(SMART_ALARM_CORE_SOURCES
     src/core/notification.cpp
     src/core/schedule_evaluator.cpp
@@ -52,7 +58,7 @@ add_library(smart_alarm_lib STATIC ${SMART_ALARM_CORE_SOURCES})
 target_include_directories(smart_alarm_lib PUBLIC src)
 target_link_libraries(smart_alarm_lib PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Multimedia)
 
-add_executable(SmartAlarm src/main.cpp src/resources.qrc)
+add_executable(SmartAlarm src/main.cpp src/resources.qrc ${SMART_ALARM_WINDOWS_RESOURCES})
 target_link_libraries(SmartAlarm PRIVATE smart_alarm_lib)
 set_target_properties(SmartAlarm PROPERTIES
     WIN32_EXECUTABLE TRUE

@@ -42,7 +42,9 @@ enum class SoundPreset {
     DigitalAlert,
     GentleChime,
     Urgent,
-    SoftPulse
+    SoftPulse,
+    HighLowAlert,
+    TriplePulse
 };
 
 enum class Waveform {

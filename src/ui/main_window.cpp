@@ -125,6 +125,14 @@ void MainWindow::createTable()
     m_table->setItemDelegateForColumn(NotificationTableModel::ColorColumn, stateDelegate);
     connect(delegate, &NotificationActionsDelegate::editRequested, this, &MainWindow::editNotification);
     connect(delegate, &NotificationActionsDelegate::deleteRequested, this, &MainWindow::deleteNotification);
+    connect(m_table, &QTableView::doubleClicked, this, [this](const QModelIndex &index) {
+        if (!index.isValid()) {
+            return;
+        }
+        if (index.column() == NotificationTableModel::MessageColumn || index.column() == NotificationTableModel::ScheduleColumn) {
+            editNotification(index.row());
+        }
+    });
     qobject_cast<QVBoxLayout *>(m_central->layout())->addWidget(m_table, 1);
 }
 

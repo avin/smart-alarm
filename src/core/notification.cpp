@@ -95,6 +95,8 @@ QString soundPresetToString(SoundPreset preset)
     case SoundPreset::GentleChime: return QStringLiteral("gentle_chime");
     case SoundPreset::Urgent: return QStringLiteral("urgent");
     case SoundPreset::SoftPulse: return QStringLiteral("soft_pulse");
+    case SoundPreset::HighLowAlert: return QStringLiteral("high_low_alert");
+    case SoundPreset::TriplePulse: return QStringLiteral("triple_pulse");
     }
     return QStringLiteral("gentle_chime");
 }
@@ -108,6 +110,8 @@ QString soundPresetDisplayName(SoundPreset preset)
     case SoundPreset::GentleChime: return QStringLiteral("Gentle chime");
     case SoundPreset::Urgent: return QStringLiteral("Urgent");
     case SoundPreset::SoftPulse: return QStringLiteral("Soft pulse");
+    case SoundPreset::HighLowAlert: return QStringLiteral("High-low alert");
+    case SoundPreset::TriplePulse: return QStringLiteral("Triple pulse");
     }
     return QStringLiteral("Gentle chime");
 }
@@ -121,6 +125,8 @@ std::optional<SoundPreset> soundPresetFromString(const QString &value)
     if (normalized == QStringLiteral("gentle_chime")) return SoundPreset::GentleChime;
     if (normalized == QStringLiteral("urgent")) return SoundPreset::Urgent;
     if (normalized == QStringLiteral("soft_pulse")) return SoundPreset::SoftPulse;
+    if (normalized == QStringLiteral("high_low_alert")) return SoundPreset::HighLowAlert;
+    if (normalized == QStringLiteral("triple_pulse")) return SoundPreset::TriplePulse;
     return std::nullopt;
 }
 

@@ -40,6 +40,8 @@ private:
     void loadFromNotification(const Notification &notification);
     Notification buildNotification() const;
     bool validateAndMark();
+    int customSoundIndex() const;
+    bool isCustomSoundSelected() const;
     QString currentPattern() const;
     void updateCustomSoundVisibility();
     void playPreview();

@@ -24,7 +24,6 @@
 namespace smartalarm {
 
 namespace {
-constexpr int CustomSoundIndex = 6;
 constexpr int TabContentMargin = 8;
 
 QLabel *createFieldLabel(const QString &text, QWidget *parent)
@@ -213,7 +212,7 @@ NotificationEditorDialog::NotificationEditorDialog(Notification notification, au
     connect(play, &QPushButton::clicked, this, &NotificationEditorDialog::playPreview);
     connect(m_help, &QPushButton::clicked, this, [this] {
         QMessageBox::information(this, QStringLiteral("Custom pattern"),
-            QStringLiteral("Use frequency/duration, note/duration or _/duration. Optional waveform: sine, square, triangle, sawtooth.\nExamples:\n880/150, _/50, 660/150\nC5/200, E5/200, G5/300"));
+            QStringLiteral("Use frequency/duration, note/duration or _/duration. Optional waveform: sine, square, triangle, sawtooth.\nExamples:\n880/150, _/50, 660/150\nC5/200, E5/200, G5/300\n880/150/sine, _/50, 660/150/square\nC5/200/triangle, E5/200/sawtooth, G5/300/sine"));
     });
 
     loadFromNotification(m_original);
@@ -332,9 +331,12 @@ void NotificationEditorDialog::loadFromNotification(const Notification &notifica
     m_playCount->setValue(notification.playCount);
 
     if (const auto *preset = std::get_if<PresetSound>(&notification.sound)) {
-        m_sound->setCurrentIndex(static_cast<int>(preset->preset));
+        const auto presetIndex = m_sound->findData(static_cast<int>(preset->preset));
+        if (presetIndex >= 0) {
+            m_sound->setCurrentIndex(presetIndex);
+        }
     } else if (const auto *custom = std::get_if<CustomSound>(&notification.sound)) {
-        m_sound->setCurrentIndex(CustomSoundIndex);
+        m_sound->setCurrentIndex(customSoundIndex());
         m_customPattern->setText(custom->pattern);
     }
 
@@ -392,7 +394,7 @@ Notification NotificationEditorDialog::buildNotification() const
     notification.color = m_color->color();
     notification.volume = m_volume->value();
     notification.playCount = m_playCount->value();
-    if (m_sound->currentIndex() == CustomSoundIndex) {
+    if (isCustomSoundSelected()) {
         notification.sound = CustomSound { m_customPattern->text().trimmed() };
     } else {
         notification.sound = PresetSound { static_cast<SoundPreset>(m_sound->currentData().toInt()) };
@@ -463,7 +465,7 @@ bool NotificationEditorDialog::validateAndMark()
 
     const auto candidate = buildNotification();
     auto result = NotificationValidator::validate(candidate);
-    if (m_sound->currentIndex() == CustomSoundIndex) {
+    if (isCustomSoundSelected()) {
         const auto parsed = audio::SoundPatternParser::parse(m_customPattern->text());
         if (!parsed.ok) {
             result.add(ValidationErrorCode::Invalid, QStringLiteral("sound.custom.pattern"));
@@ -489,9 +491,19 @@ bool NotificationEditorDialog::validateAndMark()
     return true;
 }
 
+int NotificationEditorDialog::customSoundIndex() const
+{
+    return m_sound->count() - 1;
+}
+
+bool NotificationEditorDialog::isCustomSoundSelected() const
+{
+    return m_sound->currentIndex() == customSoundIndex();
+}
+
 QString NotificationEditorDialog::currentPattern() const
 {
-    if (m_sound->currentIndex() == CustomSoundIndex) {
+    if (isCustomSoundSelected()) {
         return m_customPattern->text();
     }
     return audio::SoundPresetRegistry::patternFor(static_cast<SoundPreset>(m_sound->currentData().toInt()));
@@ -499,8 +511,7 @@ QString NotificationEditorDialog::currentPattern() const
 
 void NotificationEditorDialog::updateCustomSoundVisibility()
 {
-    const bool custom = m_sound->currentIndex() == CustomSoundIndex;
-    m_customPatternContainer->setVisible(custom);
+    m_customPatternContainer->setVisible(isCustomSoundSelected());
 }
 
 void NotificationEditorDialog::playPreview()

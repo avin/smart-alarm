@@ -3,6 +3,10 @@ function isWindows()
     return systemInfo.kernelType === "winnt" || systemInfo.productType === "windows";
 }
 
+function Component()
+{
+}
+
 Component.prototype.createOperations = function()
 {
     component.createOperations();

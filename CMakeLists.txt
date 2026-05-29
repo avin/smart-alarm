@@ -63,7 +63,7 @@ target_link_libraries(smart_alarm_lib PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6
 add_executable(SmartAlarm src/main.cpp src/resources.qrc ${SMART_ALARM_WINDOWS_RESOURCES})
 target_link_libraries(SmartAlarm PRIVATE smart_alarm_lib)
 set_target_properties(SmartAlarm PROPERTIES
-    WIN32_EXECUTABLE FALSE
+    WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_BUNDLE_NAME "Smart Alarm"
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.smartalarm.SmartAlarm"
@@ -71,8 +71,14 @@ set_target_properties(SmartAlarm PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
 )
 
+add_executable(SmartAlarmCli src/cli_main.cpp)
+target_link_libraries(SmartAlarmCli PRIVATE smart_alarm_lib)
+
 install(TARGETS SmartAlarm
     BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+install(TARGETS SmartAlarmCli
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(FILES LICENSE CLI.md DESTINATION ${CMAKE_INSTALL_DOCDIR})

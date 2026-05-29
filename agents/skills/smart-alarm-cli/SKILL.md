@@ -1,125 +1,138 @@
 ---
-name: smart-alarm-cli  
-description: Creates and manages reminders, alarms, and notifications in the installed Smart Alarm app through its CLI. Use when the user asks to remind them later, set an alarm, schedule a notification, show a popup now, snooze/dismiss a reminder, or manage Smart Alarm entries.
+name: smart-alarm-cli
+description: Creates and manages reminders, alarms, and notifications in Smart Alarm. Use when the user asks to be reminded later, set an alarm, schedule or edit notifications, show a popup now, snooze or dismiss a reminder, or inspect Smart Alarm state.
 ---
 
 # Smart Alarm CLI
 
-## Rules
+## Use This For
 
-- Use the CLI only; never edit `settings.json` directly.
-- The tray app must already be running. If CLI returns `app_not_running`, report that Smart Alarm is not running and stop.
-- Use `--json` when automation needs stable parsing.
-- Public identifiers are `uuid` values.
-- `trigger` is runtime-only: it shows a popup now, does not save JSON, and ignores the global runtime toggle.
+- "Remind me at 14:00 to put the kettle on" -> create a saved `once` notification.
+- "Remind me every weekday at 10:00" -> create a saved `weekly` notification.
+- "Remind me every 40 minutes during work hours" -> create a saved `interval` notification.
+- "Show this alert now" -> use `trigger`.
+- "Delete/update/snooze/dismiss/list my reminders" -> use the matching CLI command.
 
-## Executable
+## Command Basics
 
-Prefer `SmartAlarm.exe` from `PATH`.
-
-If `PATH` lookup fails on Windows, also try:
+Use JSON output for automation:
 
 ```powershell
-$env:LOCALAPPDATA\Programs\SmartAlarm\bin\SmartAlarm.exe
+SmartAlarmCli.exe <command> [options] --json
 ```
 
-## Health Check
+If `SmartAlarmCli.exe` is not on `PATH`, try:
 
 ```powershell
-SmartAlarm.exe cli status --json
+%LOCALAPPDATA%\Programs\SmartAlarm\bin\SmartAlarmCli.exe
 ```
 
-If `ok=false` and `error.code=app_not_running`, do not start the app unless the user explicitly asks.
+Do not edit `settings.json` directly.
 
-## Common Commands
+If a command returns:
 
-List saved notifications:
+```json
+{"ok":false,"error":{"code":"app_not_running"}}
+```
+
+tell the user Smart Alarm is not running. Do not start the app unless the user explicitly asks.
+
+Use full `uuid` values from CLI output. Do not invent or shorten UUIDs.
+
+## Choose The Right Command
+
+- Saved future reminder: `add`
+- Immediate unsaved popup: `trigger`
+- Change saved reminder: `update --uuid UUID`
+- Remove saved reminder: `delete --uuid UUID`
+- See saved reminders: `list`
+- See live runtime state: `status`
+- Dismiss/snooze open popup: `dismiss` / `snooze`
+- Pause/resume future scheduled notifications: `disable-runtime` / `enable-runtime`
+
+## Create Saved Reminders
+
+Once:
 
 ```powershell
-SmartAlarm.exe cli list --json
+SmartAlarmCli.exe add --message "Put the kettle on" --schedule-type once --date 2026-05-30 --time 14:00 --json
 ```
 
-Create a one-time notification:
+Weekly:
 
 ```powershell
-SmartAlarm.exe cli add --message "Stand up" --schedule-type once --date 2026-05-29 --time 15:30 --json
+SmartAlarmCli.exe add --message "Gym" --schedule-type weekly --days mon,wed,fri --time 18:00 --json
 ```
 
-Create a weekly notification:
+Nth week:
 
 ```powershell
-SmartAlarm.exe cli add --message "Gym" --schedule-type weekly --days mon,wed,fri --time 18:00 --json
+SmartAlarmCli.exe add --message "Review" --schedule-type nth-week --every-weeks 2 --weekday mon --time 10:00 --reference-date 2026-05-25 --json
 ```
 
-Create an interval notification:
+Interval:
 
 ```powershell
-SmartAlarm.exe cli add --message "Water" --schedule-type interval --every-minutes 40 --from 10:00 --to 18:00 --count-from trigger --days mon,tue,wed,thu,fri --json
+SmartAlarmCli.exe add --message "Drink water" --schedule-type interval --every-minutes 40 --from 10:00 --to 18:00 --count-from trigger --days mon,tue,wed,thu,fri --json
 ```
 
-Update common fields:
-
-```powershell
-SmartAlarm.exe cli update --uuid 8b2b4a5e-8f52-4b27-9b27-efb17f9f4b4c --message "Drink water" --enabled true --json
-```
-
-Delete immediately:
-
-```powershell
-SmartAlarm.exe cli delete --uuid 8b2b4a5e-8f52-4b27-9b27-efb17f9f4b4c --json
-```
-
-Trigger a runtime-only popup:
-
-```powershell
-SmartAlarm.exe cli trigger --message "Build finished" --color "#2F80ED" --sound gentle_chime --volume 70 --play-count 1 --json
-```
-
-Dismiss or snooze an active popup:
-
-```powershell
-SmartAlarm.exe cli dismiss --uuid 8b2b4a5e-8f52-4b27-9b27-efb17f9f4b4c --json
-SmartAlarm.exe cli snooze --uuid 8b2b4a5e-8f52-4b27-9b27-efb17f9f4b4c --json
-```
-
-Enable or disable future scheduled notifications:
-
-```powershell
-SmartAlarm.exe cli enable-runtime --json
-SmartAlarm.exe cli disable-runtime --json
-```
-
-## Scheduling
-
-Use these schedule types:
-
-- `once`: requires `--date yyyy-MM-dd --time HH:mm`
-- `weekly`: requires `--days mon,wed --time HH:mm`; optional `--start-date`, `--end-date`
-- `nth-week`: requires `--every-weeks N --weekday mon --time HH:mm --reference-date yyyy-MM-dd`; optional `--end-date`
-- `interval`: requires `--every-minutes N --from HH:mm --to HH:mm --count-from trigger|confirmation`; optional `--days`, `--start-date`, `--end-date`, `--snooze-minutes`
-
-For interval date limits, pass `--days`; date-only limits are rejected.
-
-## Sound
-
-Preset ids:
+Useful shared options:
 
 ```text
-classic_beep, double_beep, digital_alert, gentle_chime, urgent, soft_pulse, high_low_alert, triple_pulse
+--enabled true|false
+--color #RRGGBB
+--sound gentle_chime
+--volume 0..100
+--play-count 0..999
 ```
 
-Custom sound:
+## Immediate Popup
+
+Use `trigger` when the user wants an alert now. It is runtime-only and is not saved.
 
 ```powershell
-SmartAlarm.exe cli trigger --message "Custom alert" --sound custom --pattern "880/150, _/50, 660/150" --json
+SmartAlarmCli.exe trigger --message "Build finished" --json
+SmartAlarmCli.exe trigger --message "Custom alert" --color "#2F80ED" --sound gentle_chime --volume 70 --play-count 1 --json
 ```
 
-## Exit Codes
+The JSON response includes a `uuid` that can be used with `dismiss` or `snooze` while the popup is active.
 
-- `0`: success
-- `1`: validation error
-- `2`: app is not running
-- `3`: operation failed, not found, or popup not active
-- `4`: protocol/internal error
+## Manage Existing Reminders
 
-Full CLI documentation is installed with Smart Alarm as `CLI.md`.
+```powershell
+SmartAlarmCli.exe list --json
+SmartAlarmCli.exe get --uuid UUID --json
+SmartAlarmCli.exe update --uuid UUID --message "Drink water" --enabled true --json
+SmartAlarmCli.exe update --uuid UUID --schedule-type weekly --days mon,wed --time 10:30 --json
+SmartAlarmCli.exe delete --uuid UUID --json
+```
+
+Schedule updates require `--schedule-type` and all required fields for the new schedule.
+
+## Runtime Controls
+
+```powershell
+SmartAlarmCli.exe status --json
+SmartAlarmCli.exe dismiss --uuid UUID --json
+SmartAlarmCli.exe snooze --uuid UUID --json
+SmartAlarmCli.exe enable-runtime --json
+SmartAlarmCli.exe disable-runtime --json
+SmartAlarmCli.exe reset-interval --uuid UUID --json
+```
+
+`disable-runtime` affects only future scheduled notifications. It does not close open popups.
+
+## Formats
+
+- date: `yyyy-MM-dd`
+- time: `HH:mm`
+- days: `mon,tue,wed,thu,fri,sat,sun`
+- schedule types: `once`, `weekly`, `nth-week`, `interval`
+- count-from: `trigger`, `confirmation`
+- presets: `classic_beep`, `double_beep`, `digital_alert`, `gentle_chime`, `urgent`, `soft_pulse`, `high_low_alert`, `triple_pulse`
+
+For custom sound:
+
+```powershell
+SmartAlarmCli.exe trigger --message "Custom alert" --sound custom --pattern "880/150, _/50, 660/150" --json
+```

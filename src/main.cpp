@@ -1,5 +1,4 @@
 #include "app/app_controller.h"
-#include "app/command_client.h"
 #include "app/command_server.h"
 #include "app/minute_scheduler.h"
 #include "audio/audio_player.h"
@@ -61,12 +60,6 @@ void applyApplicationMetadata()
 
 int main(int argc, char *argv[])
 {
-    if (argc >= 2 && QString::fromLocal8Bit(argv[1]) == QStringLiteral("cli")) {
-        QCoreApplication app(argc, argv);
-        applyApplicationMetadata();
-        return CommandClient::run(app.arguments().mid(2));
-    }
-
     QApplication app(argc, argv);
     applyApplicationMetadata();
     QApplication::setApplicationDisplayName(QStringLiteral("Smart Alarm"));

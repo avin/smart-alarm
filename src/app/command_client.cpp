@@ -53,25 +53,25 @@ QVector<HelpEntry> helpEntries()
         {
             QStringLiteral("status"),
             QStringLiteral("Show runtime state."),
-            QStringLiteral("SmartAlarm.exe cli status [--json]"),
+            QStringLiteral("SmartAlarmCli.exe status [--json]"),
             QStringLiteral("Shows runtimeNotificationsEnabled, notificationCount, activePopupCount, and audioPlaying.")
         },
         {
             QStringLiteral("list"),
             QStringLiteral("List saved notifications."),
-            QStringLiteral("SmartAlarm.exe cli list [--json]"),
+            QStringLiteral("SmartAlarmCli.exe list [--json]"),
             QStringLiteral("Lists persistent notifications only. Runtime-only trigger popups are not included.")
         },
         {
             QStringLiteral("get"),
             QStringLiteral("Show one saved notification."),
-            QStringLiteral("SmartAlarm.exe cli get --uuid UUID [--json]"),
+            QStringLiteral("SmartAlarmCli.exe get --uuid UUID [--json]"),
             QStringLiteral("UUID may be passed with or without braces. Output always uses UUID without braces.")
         },
         {
             QStringLiteral("add"),
             QStringLiteral("Create a saved notification."),
-            QStringLiteral("SmartAlarm.exe cli add --message TEXT --schedule-type TYPE [schedule options] [common options] [--json]"),
+            QStringLiteral("SmartAlarmCli.exe add --message TEXT --schedule-type TYPE [schedule options] [common options] [--json]"),
             QStringLiteral(
                 "Schedule types:\n"
                 "  once: --date yyyy-MM-dd --time HH:mm\n"
@@ -83,49 +83,49 @@ QVector<HelpEntry> helpEntries()
         {
             QStringLiteral("update"),
             QStringLiteral("Update a saved notification."),
-            QStringLiteral("SmartAlarm.exe cli update --uuid UUID [common options] [--schedule-type TYPE schedule options] [--json]"),
+            QStringLiteral("SmartAlarmCli.exe update --uuid UUID [common options] [--schedule-type TYPE schedule options] [--json]"),
             QStringLiteral("Common fields can be patched. Schedule changes require --schedule-type and all required fields for the new schedule.")
         },
         {
             QStringLiteral("delete"),
             QStringLiteral("Delete a saved notification immediately."),
-            QStringLiteral("SmartAlarm.exe cli delete --uuid UUID [--json]"),
+            QStringLiteral("SmartAlarmCli.exe delete --uuid UUID [--json]"),
             QStringLiteral("Deletes without confirmation. Runtime cleanup is handled by the running app after a successful save.")
         },
         {
             QStringLiteral("trigger"),
             QStringLiteral("Show a runtime-only popup now."),
-            QStringLiteral("SmartAlarm.exe cli trigger --message TEXT [--color #RRGGBB] [--sound PRESET|custom] [--pattern PATTERN] [--volume 0..100] [--play-count 0..999] [--snooze-minutes 0..1440] [--json]"),
+            QStringLiteral("SmartAlarmCli.exe trigger --message TEXT [--color #RRGGBB] [--sound PRESET|custom] [--pattern PATTERN] [--volume 0..100] [--play-count 0..999] [--snooze-minutes 0..1440] [--json]"),
             QStringLiteral("Does not save JSON and ignores the global runtime toggle. Returns a runtime-only uuid.")
         },
         {
             QStringLiteral("dismiss"),
             QStringLiteral("Dismiss an active popup."),
-            QStringLiteral("SmartAlarm.exe cli dismiss --uuid UUID [--json]"),
+            QStringLiteral("SmartAlarmCli.exe dismiss --uuid UUID [--json]"),
             QStringLiteral("Returns not_active if the popup is not open.")
         },
         {
             QStringLiteral("snooze"),
             QStringLiteral("Snooze an active popup."),
-            QStringLiteral("SmartAlarm.exe cli snooze --uuid UUID [--json]"),
+            QStringLiteral("SmartAlarmCli.exe snooze --uuid UUID [--json]"),
             QStringLiteral("Returns not_active if the popup is not open.")
         },
         {
             QStringLiteral("enable-runtime"),
             QStringLiteral("Enable future scheduled notifications."),
-            QStringLiteral("SmartAlarm.exe cli enable-runtime [--json]"),
+            QStringLiteral("SmartAlarmCli.exe enable-runtime [--json]"),
             QStringLiteral("Does not change saved notification enabled flags.")
         },
         {
             QStringLiteral("disable-runtime"),
             QStringLiteral("Disable future scheduled notifications."),
-            QStringLiteral("SmartAlarm.exe cli disable-runtime [--json]"),
+            QStringLiteral("SmartAlarmCli.exe disable-runtime [--json]"),
             QStringLiteral("Does not close already open popups and does not stop currently playing sound.")
         },
         {
             QStringLiteral("reset-interval"),
             QStringLiteral("Reset one interval notification timer."),
-            QStringLiteral("SmartAlarm.exe cli reset-interval --uuid UUID [--json]"),
+            QStringLiteral("SmartAlarmCli.exe reset-interval --uuid UUID [--json]"),
             QStringLiteral("Works only for interval notifications.")
         },
     };
@@ -155,8 +155,8 @@ void printGeneralHelp()
     writeStdout(QStringLiteral(
         "Smart Alarm CLI\n\n"
         "Usage:\n"
-        "  SmartAlarm.exe cli <command> [options]\n"
-        "  SmartAlarm.exe cli help [command]\n\n"
+        "  SmartAlarmCli.exe <command> [options]\n"
+        "  SmartAlarmCli.exe help [command]\n\n"
         "Commands:\n"));
     for (const auto &entry : helpEntries()) {
         writeStdout(QStringLiteral("  %1%2%3\n")
@@ -167,7 +167,7 @@ void printGeneralHelp()
     writeStdout(QStringLiteral(
         "\nGlobal options:\n"
         "  --json             Print machine-readable JSON output.\n\n"
-        "Run 'SmartAlarm.exe cli help <command>' for command details.\n"));
+        "Run 'SmartAlarmCli.exe help <command>' for command details.\n"));
 }
 
 void printCommandHelp(const HelpEntry &entry)
@@ -193,7 +193,7 @@ void printHelpJson(const std::optional<HelpEntry> &entry = std::nullopt)
             object.insert(QStringLiteral("usage"), item.usage);
             commands.append(object);
         }
-        data.insert(QStringLiteral("usage"), QStringLiteral("SmartAlarm.exe cli <command> [options]"));
+        data.insert(QStringLiteral("usage"), QStringLiteral("SmartAlarmCli.exe <command> [options]"));
         data.insert(QStringLiteral("commands"), commands);
     }
 
@@ -332,11 +332,14 @@ int CommandClient::run(const QStringList &arguments)
         QString command;
         if (arguments.size() >= 2 && arguments.first() == QStringLiteral("help")) {
             command = arguments.at(1);
-        } else if (arguments.first() == QStringLiteral("--help") || arguments.first() == QStringLiteral("-h")) {
+        } else if (!arguments.isEmpty() && (arguments.first() == QStringLiteral("--help") || arguments.first() == QStringLiteral("-h"))) {
             if (arguments.size() >= 2) {
                 command = arguments.at(1);
             }
-        } else if (!arguments.isEmpty() && arguments.first() != QStringLiteral("--help") && arguments.first() != QStringLiteral("-h")) {
+        } else if (!arguments.isEmpty()
+            && arguments.first() != QStringLiteral("help")
+            && arguments.first() != QStringLiteral("--help")
+            && arguments.first() != QStringLiteral("-h")) {
             command = arguments.first();
         }
         if (!command.isEmpty() && command != QStringLiteral("--json")) {

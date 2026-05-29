@@ -15,6 +15,8 @@ public:
 
     void setPosition(NotificationPosition position);
     bool hasNotification(const QUuid &id) const;
+    int activeCount() const;
+    QVector<QUuid> activeNotificationIds() const;
     void showNotification(const Notification &notification);
     void closeNotification(const QUuid &id);
     void closeAll();

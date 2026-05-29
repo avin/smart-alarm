@@ -11,7 +11,7 @@ function isMacOS()
 function Controller()
 {
     installer.setValue("ProductUUID", "{6a1ac59f-caf4-4ed6-88e7-82eaf6d92033}");
-    installer.setDefaultPageVisible(QInstaller.ComponentSelection, false);
+    installer.setDefaultPageVisible(QInstaller.ComponentSelection, true);
     installer.setDefaultPageVisible(QInstaller.LicenseCheck, false);
 
     if (isWindows()) {

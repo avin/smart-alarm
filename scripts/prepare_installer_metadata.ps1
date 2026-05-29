@@ -71,10 +71,14 @@ function Set-XmlElementTextInFile {
 }
 
 $configPath = Join-Path $RootDir "installer\config\config.xml"
-$packagePath = Join-Path $RootDir "installer\packages\com.smartalarm.smartalarm\meta\package.xml"
+$packagesDir = Join-Path $RootDir "installer\packages"
 
 Set-XmlElementTextInFile -Path $configPath -XPath "/Installer/Version" -ElementName "Version" -Value $Version
-Set-XmlElementTextInFile -Path $packagePath -XPath "/Package/Version" -ElementName "Version" -Value $Version
-Set-XmlElementTextInFile -Path $packagePath -XPath "/Package/ReleaseDate" -ElementName "ReleaseDate" -Value $ReleaseDate.ToString("yyyy-MM-dd")
+
+$packagePaths = Get-ChildItem -Path $packagesDir -Recurse -Filter "package.xml" | Select-Object -ExpandProperty FullName
+foreach ($packagePath in $packagePaths) {
+    Set-XmlElementTextInFile -Path $packagePath -XPath "/Package/Version" -ElementName "Version" -Value $Version
+    Set-XmlElementTextInFile -Path $packagePath -XPath "/Package/ReleaseDate" -ElementName "ReleaseDate" -Value $ReleaseDate.ToString("yyyy-MM-dd")
+}
 
 Write-Host "Prepared installer metadata for version $Version."

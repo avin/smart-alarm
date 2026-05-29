@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC OFF)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.8.3 REQUIRED COMPONENTS Core Gui Widgets Multimedia Test)
+find_package(Qt6 6.8.3 REQUIRED COMPONENTS Core Gui Widgets Multimedia Network Test)
 include(GNUInstallDirs)
 
 if(MSVC)
@@ -35,6 +35,8 @@ set(SMART_ALARM_CORE_SOURCES
     src/audio/sound_preset_registry.cpp
     src/app/minute_scheduler.cpp
     src/app/app_controller.cpp
+    src/app/command_client.cpp
+    src/app/command_server.cpp
     src/ui/time_edit.cpp
     src/ui/date_edit.cpp
     src/ui/day_of_week_selector.cpp
@@ -56,12 +58,12 @@ set(SMART_ALARM_CORE_SOURCES
 
 add_library(smart_alarm_lib STATIC ${SMART_ALARM_CORE_SOURCES})
 target_include_directories(smart_alarm_lib PUBLIC src)
-target_link_libraries(smart_alarm_lib PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Multimedia)
+target_link_libraries(smart_alarm_lib PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Multimedia Qt6::Network)
 
 add_executable(SmartAlarm src/main.cpp src/resources.qrc ${SMART_ALARM_WINDOWS_RESOURCES})
 target_link_libraries(SmartAlarm PRIVATE smart_alarm_lib)
 set_target_properties(SmartAlarm PROPERTIES
-    WIN32_EXECUTABLE TRUE
+    WIN32_EXECUTABLE FALSE
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_BUNDLE_NAME "Smart Alarm"
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.smartalarm.SmartAlarm"
@@ -73,7 +75,13 @@ install(TARGETS SmartAlarm
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES LICENSE CLI.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(DIRECTORY agents/skills/smart-alarm-cli
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/SmartAlarm/agents/skills
+)
+install(FILES installer/scripts/update_user_path.ps1
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/SmartAlarm/installer
+)
 
 qt_generate_deploy_app_script(
     TARGET SmartAlarm

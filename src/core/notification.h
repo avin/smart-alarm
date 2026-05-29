@@ -131,6 +131,8 @@ struct RuntimeState {
     QHash<QUuid, QDateTime> pendingSnooze;
     QHash<QUuid, QDateTime> lastDismissedAt;
     QHash<QUuid, QDateTime> intervalResetAt;
+    QHash<QUuid, Notification> runtimeOnlyNotifications;
+    QHash<QUuid, int> runtimeOnlySnoozeMinutes;
 };
 
 QString weekdayToString(Weekday weekday);

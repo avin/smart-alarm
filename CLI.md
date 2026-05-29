@@ -17,6 +17,31 @@ The CLI is a client for the already running tray application. It never edits
 If the tray application is not running, commands return `app_not_running` and
 exit with code `2`.
 
+## Built-In Help
+
+General help does not require the tray application to be running:
+
+```powershell
+SmartAlarm.exe cli
+SmartAlarm.exe cli help
+SmartAlarm.exe cli --help
+```
+
+Command-specific help:
+
+```powershell
+SmartAlarm.exe cli help add
+SmartAlarm.exe cli help trigger
+SmartAlarm.exe cli add --help
+```
+
+Machine-readable help:
+
+```powershell
+SmartAlarm.exe cli help --json
+SmartAlarm.exe cli help add --json
+```
+
 ## Output Modes
 
 Human-readable output is the default:

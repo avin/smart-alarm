@@ -39,50 +39,6 @@ Component.prototype.executablePath = function()
     return targetDir + "/bin/SmartAlarm";
 }
 
-Component.prototype.installAgentSkill = function()
-{
-    try {
-        var source = "@TargetDir@/share/SmartAlarm/agents/skills/smart-alarm-cli";
-        var target = "@HomeDir@/.agents/skills/smart-alarm-cli";
-        component.addOperation("Mkdir", "@HomeDir@/.agents");
-        component.addOperation("Mkdir", "@HomeDir@/.agents/skills");
-        component.addOperation("Mkdir", target);
-        component.addOperation("Copy", source + "/SKILL.md", target + "/SKILL.md");
-    } catch(e) {
-        console.log("Failed to install Smart Alarm agent skill: " + e);
-    }
-}
-
-Component.prototype.addWindowsPathOperation = function()
-{
-    if (!isWindows()) {
-        return;
-    }
-
-    var scriptPath = "@TargetDir@/share/SmartAlarm/installer/update_user_path.ps1";
-    var binPath = installer.toNativeSeparators("@TargetDir@/bin");
-    component.addOperation("Execute", [
-        "{0}",
-        "powershell.exe",
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        scriptPath,
-        "add",
-        binPath,
-        "UNDOEXECUTE",
-        "powershell.exe",
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        scriptPath,
-        "remove",
-        binPath
-    ]);
-}
-
 Component.prototype.launchApplication = function()
 {
     try {
@@ -136,6 +92,4 @@ Component.prototype.createOperations = function()
         );
     }
 
-    this.installAgentSkill();
-    this.addWindowsPathOperation();
 }

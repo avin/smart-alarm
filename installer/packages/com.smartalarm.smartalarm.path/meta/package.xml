@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Add Smart Alarm to PATH</DisplayName>
+    <Description>Adds Smart Alarm to the current user's PATH so SmartAlarm.exe can be used from terminals and agents.</Description>
+    <Version>0.1.0</Version>
+    <ReleaseDate>2026-05-18</ReleaseDate>
+    <Default>true</Default>
+    <Dependencies>com.smartalarm.smartalarm</Dependencies>
+    <Script>installscript.qs</Script>
+</Package>

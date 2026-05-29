@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Install agent skill</DisplayName>
+    <Description>Installs the Smart Alarm CLI skill into the current user's .agents skills directory.</Description>
+    <Version>0.1.0</Version>
+    <ReleaseDate>2026-05-18</ReleaseDate>
+    <Default>true</Default>
+    <Dependencies>com.smartalarm.smartalarm</Dependencies>
+    <Script>installscript.qs</Script>
+</Package>

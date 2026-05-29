@@ -1,5 +1,5 @@
 ---
-name: smart-alarm-cli
+name: smart-alarm-cli  
 description: Creates and manages reminders, alarms, and notifications in the installed Smart Alarm app through its CLI. Use when the user asks to remind them later, set an alarm, schedule a notification, show a popup now, snooze/dismiss a reminder, or manage Smart Alarm entries.
 ---
 
@@ -10,12 +10,12 @@ description: Creates and manages reminders, alarms, and notifications in the ins
 - Use the CLI only; never edit `settings.json` directly.
 - The tray app must already be running. If CLI returns `app_not_running`, report that Smart Alarm is not running and stop.
 - Use `--json` when automation needs stable parsing.
-- Public identifiers are `uuid` values without braces. Do not use short ids.
+- Public identifiers are `uuid` values.
 - `trigger` is runtime-only: it shows a popup now, does not save JSON, and ignores the global runtime toggle.
 
 ## Executable
 
-Prefer `SmartAlarm.exe` from `PATH`. The Windows installer adds Smart Alarm to the current user's `PATH`; already-open shells may need restart after installation.
+Prefer `SmartAlarm.exe` from `PATH`.
 
 If `PATH` lookup fails on Windows, also try:
 

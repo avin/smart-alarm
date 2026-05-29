@@ -6,9 +6,10 @@ Smart Alarm exposes a command-line mode for scripts and LLM agents:
 SmartAlarm.exe cli <command> [options]
 ```
 
-The Windows installer adds the Smart Alarm `bin` directory to the current
-user's `PATH`. Terminals that were already open during installation might need
-to be restarted before `SmartAlarm.exe` is resolved by name.
+The Windows installer can add the Smart Alarm `bin` directory to the current
+user's `PATH`. This option is enabled by default. Terminals that were already
+open during installation might need to be restarted before `SmartAlarm.exe` is
+resolved by name.
 
 The CLI is a client for the already running tray application. It never edits
 `settings.json` directly and never starts Smart Alarm automatically.

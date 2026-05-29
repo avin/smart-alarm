@@ -14,7 +14,6 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QToolButton>
-#include <QToolTip>
 #include <QVBoxLayout>
 #include <QWidgetAction>
 
@@ -34,6 +33,9 @@ bool hasIntervalSchedule(const Notification &notification)
 
 QString scheduleMenuLabelText(const QString &text)
 {
+    if (text == QStringLiteral("No upcoming notification")) {
+        return QStringLiteral("<span style=\"color:#707070;\">No upcoming notification</span>");
+    }
     constexpr auto prefix = "Next notification:";
     if (!text.startsWith(QLatin1String(prefix))) {
         return text.toHtmlEscaped();
@@ -231,7 +233,6 @@ void MainWindow::showScheduleDetails(const QModelIndex &index)
                 QMessageBox::warning(this, QStringLiteral("Reset failed"), result.errorMessage);
                 return;
             }
-            QToolTip::showText(popupPosition, nextNotificationText(*notification, QDateTime::currentDateTime()), m_table);
         }
         return;
     }

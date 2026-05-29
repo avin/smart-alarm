@@ -74,6 +74,7 @@ OperationResult AppController::updateNotification(const QUuid &id, const Notific
             const auto result = saveReplacing(std::move(next));
             if (result.ok) {
                 m_runtime.pendingSnooze.remove(id);
+                m_runtime.intervalResetAt.remove(id);
             }
             return result;
         }
@@ -95,6 +96,7 @@ OperationResult AppController::deleteNotification(const QUuid &id)
     if (result.ok) {
         m_runtime.pendingSnooze.remove(id);
         m_runtime.lastDismissedAt.remove(id);
+        m_runtime.intervalResetAt.remove(id);
         if (m_audioQueue) m_audioQueue->stopNotification(id);
         if (m_popupManager) m_popupManager->closeNotification(id);
     }
@@ -110,6 +112,7 @@ OperationResult AppController::setNotificationEnabled(const QUuid &id, bool enab
             const auto result = saveReplacing(std::move(next));
             if (result.ok && !enabled) {
                 m_runtime.pendingSnooze.remove(id);
+                m_runtime.intervalResetAt.remove(id);
                 if (m_audioQueue) m_audioQueue->stopNotification(id);
                 if (m_popupManager) m_popupManager->closeNotification(id);
             }
@@ -147,6 +150,30 @@ void AppController::setRuntimeNotificationsEnabled(bool enabled)
     emit runtimeToggleChanged(enabled);
 }
 
+std::optional<QDateTime> AppController::nextNotificationTime(const QUuid &id, const QDateTime &from) const
+{
+    const auto *notification = findNotification(id);
+    if (!notification) {
+        return std::nullopt;
+    }
+    return ScheduleEvaluator::nextOccurrence(*notification, from, m_runtime);
+}
+
+OperationResult AppController::resetIntervalTimer(const QUuid &id, const QDateTime &now)
+{
+    const auto *notification = findNotification(id);
+    if (!notification) {
+        return { false, QStringLiteral("Notification was not found") };
+    }
+    if (!std::holds_alternative<IntervalSchedule>(notification->schedule)) {
+        return { false, QStringLiteral("Notification does not use an interval schedule") };
+    }
+    m_runtime.pendingSnooze.remove(id);
+    m_runtime.lastDismissedAt.remove(id);
+    m_runtime.intervalResetAt.insert(id, now);
+    return { true, {} };
+}
+
 void AppController::handleMinuteTick(const QDateTime &now)
 {
     for (const auto &notification : m_config.notifications) {
@@ -174,6 +201,7 @@ void AppController::dismissNotification(const QUuid &id)
         const auto &interval = std::get<IntervalSchedule>(notification->schedule);
         if (interval.countFrom == CountFrom::Confirmation) {
             m_runtime.lastDismissedAt.insert(id, QDateTime::currentDateTime());
+            m_runtime.intervalResetAt.remove(id);
         }
     }
     if (m_popupManager) {

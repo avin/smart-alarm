@@ -41,10 +41,10 @@ QVariant NotificationTableModel::data(const QModelIndex &index, int role) const
     if (index.column() == ColorColumn && role == Qt::DecorationRole) {
         return QColor(notification.color);
     }
-    if (index.column() == MessageColumn && (role == Qt::DisplayRole || role == Qt::ToolTipRole)) {
+    if (index.column() == MessageColumn && role == Qt::DisplayRole) {
         return notification.message;
     }
-    if (index.column() == ScheduleColumn && (role == Qt::DisplayRole || role == Qt::ToolTipRole)) {
+    if (index.column() == ScheduleColumn && role == Qt::DisplayRole) {
         return ScheduleFormatter::format(notification.schedule);
     }
     if (index.column() == ScheduleColumn && role == Qt::ForegroundRole && overdue) {

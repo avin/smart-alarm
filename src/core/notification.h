@@ -130,6 +130,7 @@ struct RuntimeState {
     QHash<QUuid, QDateTime> lastTriggeredMinute;
     QHash<QUuid, QDateTime> pendingSnooze;
     QHash<QUuid, QDateTime> lastDismissedAt;
+    QHash<QUuid, QDateTime> intervalResetAt;
 };
 
 QString weekdayToString(Weekday weekday);

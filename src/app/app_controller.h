@@ -7,6 +7,8 @@
 
 #include <QObject>
 
+#include <optional>
+
 namespace smartalarm {
 
 class PopupManager;
@@ -37,6 +39,8 @@ public:
 
     bool runtimeNotificationsEnabled() const;
     void setRuntimeNotificationsEnabled(bool enabled);
+    std::optional<QDateTime> nextNotificationTime(const QUuid &id, const QDateTime &from) const;
+    OperationResult resetIntervalTimer(const QUuid &id, const QDateTime &now);
 
     void handleMinuteTick(const QDateTime &now);
     void dismissNotification(const QUuid &id);

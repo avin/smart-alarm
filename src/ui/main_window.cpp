@@ -9,9 +9,11 @@
 
 #include <QCloseEvent>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QToolButton>
+#include <QToolTip>
 #include <QVBoxLayout>
 
 namespace smartalarm {
@@ -21,6 +23,11 @@ namespace {
 QString notificationsStateText(bool enabled)
 {
     return enabled ? QStringLiteral("Notifications enabled") : QStringLiteral("Notifications disabled");
+}
+
+bool hasIntervalSchedule(const Notification &notification)
+{
+    return std::holds_alternative<IntervalSchedule>(notification.schedule);
 }
 
 } // namespace
@@ -129,8 +136,10 @@ void MainWindow::createTable()
         if (!index.isValid()) {
             return;
         }
-        if (index.column() == NotificationTableModel::MessageColumn || index.column() == NotificationTableModel::ScheduleColumn) {
+        if (index.column() == NotificationTableModel::MessageColumn) {
             editNotification(index.row());
+        } else if (index.column() == NotificationTableModel::ScheduleColumn) {
+            showScheduleDetails(index);
         }
     });
     qobject_cast<QVBoxLayout *>(m_central->layout())->addWidget(m_table, 1);
@@ -174,6 +183,38 @@ void MainWindow::deleteNotification(int row)
     m_controller->deleteNotification(notification->id);
 }
 
+void MainWindow::showScheduleDetails(const QModelIndex &index)
+{
+    if (!index.isValid() || index.column() != NotificationTableModel::ScheduleColumn) {
+        return;
+    }
+    const auto notification = m_model->notificationAt(index.row());
+    if (!notification) {
+        return;
+    }
+
+    const auto rect = m_table->visualRect(index);
+    const auto popupPosition = m_table->viewport()->mapToGlobal(rect.bottomLeft());
+    QMenu menu(this);
+    auto *nextAction = menu.addAction(nextNotificationText(*notification, QDateTime::currentDateTime()));
+    nextAction->setEnabled(false);
+    if (hasIntervalSchedule(*notification)) {
+        menu.addSeparator();
+        auto *resetAction = menu.addAction(QStringLiteral("Reset interval timer"));
+        const auto selected = menu.exec(popupPosition);
+        if (selected == resetAction) {
+            const auto result = m_controller->resetIntervalTimer(notification->id, QDateTime::currentDateTime());
+            if (!result.ok) {
+                QMessageBox::warning(this, QStringLiteral("Reset failed"), result.errorMessage);
+                return;
+            }
+            QToolTip::showText(popupPosition, nextNotificationText(*notification, QDateTime::currentDateTime()), m_table);
+        }
+        return;
+    }
+    menu.exec(popupPosition);
+}
+
 void MainWindow::openGlobalSettings()
 {
     GlobalSettingsDialog dialog(m_controller->settings(), this);
@@ -196,6 +237,21 @@ bool MainWindow::saveEditorResult(const std::optional<QUuid> &existingId, Notifi
         QMessageBox::critical(this, QStringLiteral("Save failed"), result.errorMessage);
     }
     return result.ok;
+}
+
+QString MainWindow::nextNotificationText(const Notification &notification, const QDateTime &now) const
+{
+    if (!m_controller->runtimeNotificationsEnabled()) {
+        return QStringLiteral("Notifications are disabled");
+    }
+    if (!notification.enabled) {
+        return QStringLiteral("Notification is disabled");
+    }
+    const auto next = m_controller->nextNotificationTime(notification.id, now);
+    if (!next) {
+        return QStringLiteral("No upcoming notification");
+    }
+    return QStringLiteral("Next notification: %1").arg(next->toString(QStringLiteral("yyyy-MM-dd HH:mm")));
 }
 
 } // namespace smartalarm

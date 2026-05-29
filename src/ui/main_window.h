@@ -33,8 +33,10 @@ private:
     void createNotification();
     void editNotification(int row);
     void deleteNotification(int row);
+    void showScheduleDetails(const QModelIndex &index);
     void openGlobalSettings();
     bool saveEditorResult(const std::optional<QUuid> &existingId, NotificationEditorDialog &dialog);
+    QString nextNotificationText(const Notification &notification, const QDateTime &now) const;
 
     AppController *m_controller = nullptr;
     audio::AudioQueue *m_audioQueue = nullptr;

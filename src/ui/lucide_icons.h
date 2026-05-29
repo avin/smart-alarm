@@ -15,6 +15,7 @@ enum class Icon {
     CircleQuestionMark,
     Play,
     Plus,
+    RefreshCw,
     Settings,
     SquarePen,
     Trash2,

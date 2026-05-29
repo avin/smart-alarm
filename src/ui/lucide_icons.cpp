@@ -23,6 +23,8 @@ QString path(Icon icon)
         return QStringLiteral(":/icons/play.svg");
     case Icon::Plus:
         return QStringLiteral(":/icons/plus.svg");
+    case Icon::RefreshCw:
+        return QStringLiteral(":/icons/refresh-cw.svg");
     case Icon::Settings:
         return QStringLiteral(":/icons/settings.svg");
     case Icon::SquarePen:

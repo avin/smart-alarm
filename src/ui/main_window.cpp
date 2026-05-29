@@ -9,12 +9,14 @@
 
 #include <QCloseEvent>
 #include <QHeaderView>
+#include <QLabel>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QToolButton>
 #include <QToolTip>
 #include <QVBoxLayout>
+#include <QWidgetAction>
 
 namespace smartalarm {
 
@@ -28,6 +30,16 @@ QString notificationsStateText(bool enabled)
 bool hasIntervalSchedule(const Notification &notification)
 {
     return std::holds_alternative<IntervalSchedule>(notification.schedule);
+}
+
+QString scheduleMenuLabelText(const QString &text)
+{
+    constexpr auto prefix = "Next notification:";
+    if (!text.startsWith(QLatin1String(prefix))) {
+        return text.toHtmlEscaped();
+    }
+    const auto suffix = text.sliced(QString::fromLatin1(prefix).size()).toHtmlEscaped();
+    return QStringLiteral("<b>Next notification:</b>%1").arg(suffix);
 }
 
 } // namespace
@@ -118,6 +130,7 @@ void MainWindow::createTable()
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
     m_table->setAlternatingRowColors(true);
+    m_table->setContextMenuPolicy(Qt::CustomContextMenu);
     m_table->verticalHeader()->setVisible(false);
     m_table->horizontalHeader()->setStretchLastSection(false);
     m_table->setColumnWidth(NotificationTableModel::EnabledColumn, 36);
@@ -132,6 +145,12 @@ void MainWindow::createTable()
     m_table->setItemDelegateForColumn(NotificationTableModel::ColorColumn, stateDelegate);
     connect(delegate, &NotificationActionsDelegate::editRequested, this, &MainWindow::editNotification);
     connect(delegate, &NotificationActionsDelegate::deleteRequested, this, &MainWindow::deleteNotification);
+    connect(m_table, &QTableView::customContextMenuRequested, this, [this](const QPoint &position) {
+        const auto index = m_table->indexAt(position);
+        if (index.isValid() && index.column() == NotificationTableModel::ScheduleColumn) {
+            showScheduleDetails(index);
+        }
+    });
     connect(m_table, &QTableView::doubleClicked, this, [this](const QModelIndex &index) {
         if (!index.isValid()) {
             return;
@@ -196,11 +215,15 @@ void MainWindow::showScheduleDetails(const QModelIndex &index)
     const auto rect = m_table->visualRect(index);
     const auto popupPosition = m_table->viewport()->mapToGlobal(rect.bottomLeft());
     QMenu menu(this);
-    auto *nextAction = menu.addAction(nextNotificationText(*notification, QDateTime::currentDateTime()));
-    nextAction->setEnabled(false);
+    auto *nextAction = new QWidgetAction(&menu);
+    auto *nextLabel = new QLabel(scheduleMenuLabelText(nextNotificationText(*notification, QDateTime::currentDateTime())), &menu);
+    nextLabel->setTextFormat(Qt::RichText);
+    nextLabel->setContentsMargins(28, 4, 28, 4);
+    nextAction->setDefaultWidget(nextLabel);
+    menu.addAction(nextAction);
     if (hasIntervalSchedule(*notification)) {
         menu.addSeparator();
-        auto *resetAction = menu.addAction(QStringLiteral("Reset interval timer"));
+        auto *resetAction = menu.addAction(lucide::icon(lucide::Icon::RefreshCw), QStringLiteral("Reset interval timer"));
         const auto selected = menu.exec(popupPosition);
         if (selected == resetAction) {
             const auto result = m_controller->resetIntervalTimer(notification->id, QDateTime::currentDateTime());

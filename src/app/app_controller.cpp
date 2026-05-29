@@ -49,6 +49,17 @@ RuntimeState &AppController::runtime()
     return m_runtime;
 }
 
+std::optional<Notification> AppController::notificationByUuid(const QUuid &id) const
+{
+    if (const auto *notification = findNotification(id)) {
+        return *notification;
+    }
+    if (m_runtime.runtimeOnlyNotifications.contains(id)) {
+        return m_runtime.runtimeOnlyNotifications.value(id);
+    }
+    return std::nullopt;
+}
+
 OperationResult AppController::addNotification(const Notification &notification)
 {
     auto validation = NotificationValidator::validate(notification);
@@ -136,6 +147,47 @@ OperationResult AppController::updateSettings(const GlobalSettings &settings)
     return result;
 }
 
+RuntimeTriggerResult AppController::triggerRuntimeNotification(const RuntimeNotificationOptions &options)
+{
+    Notification notification;
+    notification.id = QUuid::createUuid();
+    notification.enabled = true;
+    notification.message = options.message;
+    notification.color = options.color;
+    notification.volume = options.volume;
+    notification.playCount = options.playCount;
+    notification.sound = options.sound;
+    notification.schedule = OnceSchedule { QDate::currentDate(), QTime::currentTime() };
+
+    if (notification.message.trimmed().isEmpty()) {
+        return { { false, QStringLiteral("Message is required") }, {} };
+    }
+    if (!isCanonicalHexColor(notification.color)) {
+        return { { false, QStringLiteral("Color is invalid") }, {} };
+    }
+    notification.color = canonicalHexColor(notification.color);
+    if (notification.volume < 0 || notification.volume > 100) {
+        return { { false, QStringLiteral("Volume is out of range") }, {} };
+    }
+    if (notification.playCount < 0 || notification.playCount > 999) {
+        return { { false, QStringLiteral("Play count is out of range") }, {} };
+    }
+    if (options.snoozeMinutes < 0 || options.snoozeMinutes > 1440) {
+        return { { false, QStringLiteral("Snooze minutes is out of range") }, {} };
+    }
+    if (const auto *custom = std::get_if<CustomSound>(&notification.sound); custom && custom->pattern.trimmed().isEmpty()) {
+        return { { false, QStringLiteral("Custom sound pattern is required") }, {} };
+    }
+    if (!m_popupManager) {
+        return { { false, QStringLiteral("Notification runtime is not available") }, {} };
+    }
+
+    m_runtime.runtimeOnlyNotifications.insert(notification.id, notification);
+    m_runtime.runtimeOnlySnoozeMinutes.insert(notification.id, options.snoozeMinutes);
+    triggerNotification(notification);
+    return { { true, {} }, notification.id };
+}
+
 bool AppController::runtimeNotificationsEnabled() const
 {
     return m_runtime.notificationsEnabled;
@@ -148,6 +200,31 @@ void AppController::setRuntimeNotificationsEnabled(bool enabled)
     }
     m_runtime.notificationsEnabled = enabled;
     emit runtimeToggleChanged(enabled);
+}
+
+bool AppController::hasActiveNotification(const QUuid &id) const
+{
+    return m_popupManager && m_popupManager->hasNotification(id);
+}
+
+int AppController::activeNotificationCount() const
+{
+    return m_popupManager ? m_popupManager->activeCount() : 0;
+}
+
+QVector<QUuid> AppController::activeNotificationIds() const
+{
+    return m_popupManager ? m_popupManager->activeNotificationIds() : QVector<QUuid> {};
+}
+
+bool AppController::isRuntimeOnlyNotification(const QUuid &id) const
+{
+    return m_runtime.runtimeOnlyNotifications.contains(id);
+}
+
+bool AppController::isAudioPlaying() const
+{
+    return m_audioQueue && m_audioQueue->isPlaying();
 }
 
 std::optional<QDateTime> AppController::nextNotificationTime(const QUuid &id, const QDateTime &from) const
@@ -189,6 +266,20 @@ void AppController::handleMinuteTick(const QDateTime &now)
         m_runtime.lastTriggeredMinute.insert(notification.id, normalizeToMinute(now));
         triggerNotification(notification);
     }
+
+    if (!m_runtime.notificationsEnabled) {
+        return;
+    }
+    const auto runtimeIds = m_runtime.runtimeOnlyNotifications.keys();
+    for (const auto &id : runtimeIds) {
+        const auto snoozeAt = m_runtime.pendingSnooze.value(id);
+        if (!snoozeAt.isValid() || normalizeToMinute(now) < normalizeToMinute(snoozeAt)) {
+            continue;
+        }
+        const auto notification = m_runtime.runtimeOnlyNotifications.value(id);
+        m_runtime.pendingSnooze.remove(id);
+        triggerNotification(notification);
+    }
 }
 
 void AppController::dismissNotification(const QUuid &id)
@@ -207,11 +298,18 @@ void AppController::dismissNotification(const QUuid &id)
     if (m_popupManager) {
         m_popupManager->closeNotification(id);
     }
+    if (m_runtime.runtimeOnlyNotifications.contains(id)) {
+        m_runtime.runtimeOnlyNotifications.remove(id);
+        m_runtime.runtimeOnlySnoozeMinutes.remove(id);
+        m_runtime.pendingSnooze.remove(id);
+    }
 }
 
 void AppController::snoozeNotification(const QUuid &id)
 {
-    const auto *notification = findNotification(id);
+    const auto persistentNotification = findNotification(id);
+    const auto runtimeNotification = m_runtime.runtimeOnlyNotifications.value(id);
+    const auto *notification = persistentNotification ? persistentNotification : (runtimeNotification.id.isNull() ? nullptr : &runtimeNotification);
     if (!notification) {
         return;
     }
@@ -302,6 +400,12 @@ QString AppController::patternFor(const Notification &notification) const
 
 int AppController::resolvedSnoozeMinutes(const Notification &notification) const
 {
+    if (m_runtime.runtimeOnlySnoozeMinutes.contains(notification.id)) {
+        const int minutes = m_runtime.runtimeOnlySnoozeMinutes.value(notification.id);
+        if (minutes > 0) {
+            return minutes;
+        }
+    }
     if (const auto *interval = std::get_if<IntervalSchedule>(&notification.schedule)) {
         if (interval->snoozeMinutes > 0) {
             return interval->snoozeMinutes;

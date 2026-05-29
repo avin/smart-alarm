@@ -1,4 +1,6 @@
 #include "app/app_controller.h"
+#include "app/command_client.h"
+#include "app/command_server.h"
 #include "app/minute_scheduler.h"
 #include "audio/audio_player.h"
 #include "audio/audio_queue.h"
@@ -7,6 +9,7 @@
 #include "ui/tray_controller.h"
 
 #include <QApplication>
+#include <QCoreApplication>
 #include <QDir>
 #include <QLockFile>
 #include <QMessageBox>
@@ -47,13 +50,25 @@ QString lockPath()
     return QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)).filePath(QStringLiteral("smart-alarm.lock"));
 }
 
+void applyApplicationMetadata()
+{
+    QCoreApplication::setOrganizationName(QStringLiteral("SmartAlarm"));
+    QCoreApplication::setApplicationName(QStringLiteral("SmartAlarm"));
+    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+}
+
 } // namespace
 
 int main(int argc, char *argv[])
 {
+    if (argc >= 2 && QString::fromLocal8Bit(argv[1]) == QStringLiteral("cli")) {
+        QCoreApplication app(argc, argv);
+        applyApplicationMetadata();
+        return CommandClient::run(app.arguments().mid(2));
+    }
+
     QApplication app(argc, argv);
-    QApplication::setOrganizationName(QStringLiteral("SmartAlarm"));
-    QApplication::setApplicationName(QStringLiteral("SmartAlarm"));
+    applyApplicationMetadata();
     QApplication::setApplicationDisplayName(QStringLiteral("Smart Alarm"));
     QApplication::setQuitOnLastWindowClosed(false);
     applyApplicationStyle(app);
@@ -82,6 +97,7 @@ int main(int argc, char *argv[])
     MainWindow mainWindow(&controller, &audioQueue, &previewPlayer);
     TrayController tray(&controller, &mainWindow);
     MinuteScheduler scheduler;
+    CommandServer commandServer(&controller);
 
     QObject::connect(&scheduler, &MinuteScheduler::minuteTick, &controller, &AppController::handleMinuteTick);
     QObject::connect(&popupManager, &PopupManager::dismissed, &controller, &AppController::dismissNotification);
@@ -95,6 +111,9 @@ int main(int argc, char *argv[])
     });
 
     tray.show();
+    if (!commandServer.start()) {
+        qWarning("Failed to start CLI command server.");
+    }
     scheduler.start();
     return app.exec();
 }

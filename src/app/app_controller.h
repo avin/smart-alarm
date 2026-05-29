@@ -18,6 +18,20 @@ struct OperationResult {
     QString errorMessage;
 };
 
+struct RuntimeNotificationOptions {
+    QString message;
+    QString color = QStringLiteral("#D94841");
+    SoundSpec sound = PresetSound { SoundPreset::GentleChime };
+    int volume = 70;
+    int playCount = 1;
+    int snoozeMinutes = 0;
+};
+
+struct RuntimeTriggerResult {
+    OperationResult operation;
+    QUuid uuid;
+};
+
 class AppController : public QObject {
     Q_OBJECT
 public:
@@ -30,15 +44,22 @@ public:
     const QVector<Notification> &notifications() const;
     const GlobalSettings &settings() const;
     RuntimeState &runtime();
+    std::optional<Notification> notificationByUuid(const QUuid &id) const;
 
     OperationResult addNotification(const Notification &notification);
     OperationResult updateNotification(const QUuid &id, const Notification &notification);
     OperationResult deleteNotification(const QUuid &id);
     OperationResult setNotificationEnabled(const QUuid &id, bool enabled);
     OperationResult updateSettings(const GlobalSettings &settings);
+    RuntimeTriggerResult triggerRuntimeNotification(const RuntimeNotificationOptions &options);
 
     bool runtimeNotificationsEnabled() const;
     void setRuntimeNotificationsEnabled(bool enabled);
+    bool hasActiveNotification(const QUuid &id) const;
+    int activeNotificationCount() const;
+    QVector<QUuid> activeNotificationIds() const;
+    bool isRuntimeOnlyNotification(const QUuid &id) const;
+    bool isAudioPlaying() const;
     std::optional<QDateTime> nextNotificationTime(const QUuid &id, const QDateTime &from) const;
     OperationResult resetIntervalTimer(const QUuid &id, const QDateTime &now);
 

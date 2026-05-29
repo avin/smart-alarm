@@ -28,6 +28,16 @@ bool PopupManager::hasNotification(const QUuid &id) const
     return m_popups.contains(id);
 }
 
+int PopupManager::activeCount() const
+{
+    return m_popups.size();
+}
+
+QVector<QUuid> PopupManager::activeNotificationIds() const
+{
+    return m_order;
+}
+
 void PopupManager::showNotification(const Notification &notification)
 {
     if (m_popups.contains(notification.id)) {

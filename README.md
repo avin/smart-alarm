@@ -28,6 +28,10 @@ It shows up when it matters. 🔔
 
 ![Interval alarm](screenshots/interval.png)
 
+## CLI
+
+Smart Alarm includes a CLI mode for scripts and LLM agents. See [CLI.md](CLI.md).
+
 ## License
 
 GPL-3.0
